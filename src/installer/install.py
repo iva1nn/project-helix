@@ -340,6 +340,13 @@ def unextracted_archives():
     return out
 
 
+def get_it(game):
+    """' Download: <link>' for the game's current pack, if the repository has one"""
+    pins = PACKS.get(game, [])
+    url = pins[-1].get("url") if pins else None
+    return ("\n      Download: %s" % url) if url else ""
+
+
 def check_archive(game, arc):
     """a pack archive still in the folder, checked against the published one before the player extracts it"""
     pins = PACKS.get(game, [])
@@ -347,12 +354,13 @@ def check_archive(game, arc):
     pin = next((e for e in pins if e["archive_size"] == size), None)
     if not pin:
         if any(e["archive"].lower() == arc.name.lower() for e in pins):
-            return "%s is incomplete (%.2f GB, the published file has %.2f GB): download it again." % (
-                rel(arc), size / 2 ** 30, pins[0]["archive_size"] / 2 ** 30)
+            return "%s is incomplete (%.2f GB, the published file has %.2f GB): download it again.%s" % (
+                rel(arc), size / 2 ** 30, pins[-1]["archive_size"] / 2 ** 30, get_it(game))
         return None  # not a pack of this game
     say("  checking %s against the published pack (%.0f GB) ..." % (rel(arc), size / 1e9))
     if sha256_file(arc) != pin["archive_sha256"]:
-        return "%s is damaged or not the published file (its checksum differs): download it again." % rel(arc)
+        return "%s is damaged or not the published file (its checksum differs): download it again.%s" % (
+            rel(arc), get_it(game))
     return ("%s is the published pack and is fine, but not extracted yet: extract it into this folder (its data "
             "folder merges with data\\), then run install.bat again." % rel(arc))
 
@@ -370,12 +378,13 @@ def pin_check(game, man_path, man):
     known = ", ".join(e["version"] for e in pins)
     if have[:10] < want[:10]:
         return ("this pack (version %s) is older than this installer needs (%s): download the current pack and "
-                "replace the old one with it (README.md, section Updating)." % (have, known))
+                "replace the old one with it (README.md, section Updating).%s" % (have, known, get_it(game)))
     if have[:10] > want[:10]:
         return ("this pack (version %s) is newer than this copy of the repository knows (%s): update the "
                 "repository (git pull, or download the ZIP again) and run install.bat again." % (have, known))
     return ("this pack's file list differs from the published pack %s: the pack was modified, or comes from "
-            "somewhere else. Download the pack again from the official link and extract it over this one." % known)
+            "somewhere else. Download the pack again from the official link and extract it over this one.%s" % (
+                known, get_it(game)))
 
 
 def check_assets(game, verify):
@@ -392,7 +401,7 @@ def check_assets(game, verify):
                     "archive's data folder merges with data\\)." % ", ".join(rel(a) for a in arcs))
         elif (DATA / game).is_dir():
             hint = " data\\%s exists but data\\manifests\\%s.json does not: extract the whole pack again." % (game, game)
-        return "no asset pack found." + hint
+        return "no asset pack found." + hint + get_it(game)
     try:
         man = json.loads(man_path.read_text(encoding="utf-8"))
         files = man["files"]

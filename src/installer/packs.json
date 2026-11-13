@@ -5,7 +5,8 @@
    "manifest_sha256": "b5e5dbdf5a59dd0274a59023f5d0eb1533d90c9871e33d745aeaa4c33d525c95",
    "archive": "fe1-assets-2026-11-13-f3c5ece.7z",
    "archive_size": 16335514358,
-   "archive_sha256": "bb56c00a78bc83f135424e9dd62437e93b94f784c36155cc6164a8c01dcf0e01"
+   "archive_sha256": "bb56c00a78bc83f135424e9dd62437e93b94f784c36155cc6164a8c01dcf0e01",
+   "url": "https://drive.google.com/file/d/1k_6z9l4Rae3eXTpGvgdYS8Tf48yebKoV/view?usp=sharing"
   }
  ],
  "fe2": [
@@ -14,7 +15,8 @@
    "manifest_sha256": "7ff0a0f3ff7234bc415b29eb0d0c8498744283764ce870668d9338eae3d6699d",
    "archive": "fe2-assets-2026-11-13-f3c5ece.7z",
    "archive_size": 24261242976,
-   "archive_sha256": "644c98dc35f86ab8cbc75b703b1e1211bfafa808618e6f21e4be62bfe4d441fb"
+   "archive_sha256": "644c98dc35f86ab8cbc75b703b1e1211bfafa808618e6f21e4be62bfe4d441fb",
+   "url": "https://drive.google.com/file/d/1zA3IIyikUYEVd7MYbpphT8mURIhHn021/view?usp=sharing"
   }
  ]
 }
