@@ -1,0 +1,32 @@
+# everything the player adds or the installer makes stays out of git
+/.toolchain/
+/install.log
+/Fear Effect/
+/Fear Effect 2/
+/src/gen*/
+/src/build*/
+/src/runtime/font_table.h
+/src/icons/*.ico
+__pycache__/
+
+# the remastered assets (separate download) and the downloaded movie decoder
+/data/*
+!/data/README.txt
+
+# the player's own disc images: never committed, wherever they are put
+*.bin
+*.cue
+*.img
+*.iso
+*.chd
+*.pbp
+*.ecm
+*.ccd
+*.sub
+/discs/*
+!/discs/fe1/
+!/discs/fe2/
+/discs/fe1/*
+/discs/fe2/*
+!/discs/fe1/README.txt
+!/discs/fe2/README.txt

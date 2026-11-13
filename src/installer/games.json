@@ -1,0 +1,104 @@
+{
+ "fe1": {
+  "title": "Fear Effect",
+  "version": "USA",
+  "folder": "Fear Effect",
+  "cue_name": "Fear Effect",
+  "shortcut": "Fear Effect",
+  "discs": {
+   "1": {
+    "serial": "SLUS-00920",
+    "files": {
+     "/SLUS_009.20": "5199f3064277768b9144d0bd4602f6922f718f53",
+     "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
+     "/OVERLAY/LOCA.OVR": "1ef7218b40a41f134d8819c5262044f11850fdfb"
+    }
+   },
+   "2": {
+    "serial": "SLUS-01056",
+    "files": {
+     "/SLUS_010.56": "5199f3064277768b9144d0bd4602f6922f718f53",
+     "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
+     "/OVERLAY/LOCD.OVR": "d0be4f90e55c884fc088ed45814c577a0cadd41f",
+     "/OVERLAY/LOCH.OVR": "49204d1e2c82a352042947863feb5463572493e5"
+    }
+   },
+   "3": {
+    "serial": "SLUS-01057",
+    "files": {
+     "/SLUS_010.57": "5199f3064277768b9144d0bd4602f6922f718f53",
+     "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
+     "/OVERLAY/LOCE.OVR": "2c7a046823c11a77f5e1a171abecd82ce1a4f156"
+    }
+   },
+   "4": {
+    "serial": "SLUS-01058",
+    "files": {
+     "/SLUS_010.58": "5199f3064277768b9144d0bd4602f6922f718f53",
+     "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
+     "/OVERLAY/LOCF.OVR": "b129024bf2b54b1156eb302f30f913fbec43b26f",
+     "/OVERLAY/LOCG.OVR": "fd6f4d7e6e3d5034d554a7a4465141563a626b4c"
+    }
+   }
+  },
+  "exe_sha1": "5199f3064277768b9144d0bd4602f6922f718f53"
+ },
+ "fe2": {
+  "title": "Fear Effect 2: Retro Helix",
+  "version": "USA v1.1",
+  "folder": "Fear Effect 2",
+  "cue_name": "Fear Effect 2",
+  "shortcut": "Fear Effect 2 - Retro Helix",
+  "discs": {
+   "1": {
+    "serial": "SLUS-01266",
+    "files": {
+     "/SLUS_012.66": "a5784ca239ccba595ab9e32139fc02ab040dad03",
+     "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
+     "/OVERLAY/GSHELL.OVR": "a2dbd861e01e0075b4a16901461ec5a516e9c76c",
+     "/OVERLAY/LANG.OVR": "25aa41688fb482ea3cd9d0fccb88de9313638da8",
+     "/OVERLAY/LOCA.OVR": "2595ef587863a16702ea5ffcd9c1c22765e9dc58",
+     "/OVERLAY/LOCC.OVR": "ad6ce15710554e25a18067e84454d0482e5d93e6",
+     "/OVERLAY/SWAP.OVR": "8fb9849813876a3e4cd263da3f6548baf0ba18ef"
+    }
+   },
+   "2": {
+    "serial": "SLUS-01275",
+    "files": {
+     "/SLUS_012.75": "a5784ca239ccba595ab9e32139fc02ab040dad03",
+     "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
+     "/OVERLAY/GSHELL.OVR": "a2dbd861e01e0075b4a16901461ec5a516e9c76c",
+     "/OVERLAY/LANG.OVR": "25aa41688fb482ea3cd9d0fccb88de9313638da8",
+     "/OVERLAY/LOCB.OVR": "533c53a3cd1c76d4495c2b724ba87c3d1ec7e8aa",
+     "/OVERLAY/LOCH.OVR": "b7aff3adebe8dc3bd36eb268933795d7aab6f3e6",
+     "/OVERLAY/SWAP.OVR": "8fb9849813876a3e4cd263da3f6548baf0ba18ef"
+    }
+   },
+   "3": {
+    "serial": "SLUS-01276",
+    "files": {
+     "/SLUS_012.76": "a5784ca239ccba595ab9e32139fc02ab040dad03",
+     "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
+     "/OVERLAY/GSHELL.OVR": "a2dbd861e01e0075b4a16901461ec5a516e9c76c",
+     "/OVERLAY/LANG.OVR": "25aa41688fb482ea3cd9d0fccb88de9313638da8",
+     "/OVERLAY/LOCE.OVR": "d1c6cb89d2a3f1e806cce3c5a34c747e9f4e00d2",
+     "/OVERLAY/LOCI.OVR": "18de1469b6c0818c8b703bb2f2e7c649cd6ec3cc",
+     "/OVERLAY/SWAP.OVR": "8fb9849813876a3e4cd263da3f6548baf0ba18ef"
+    }
+   },
+   "4": {
+    "serial": "SLUS-01277",
+    "files": {
+     "/SLUS_012.77": "a5784ca239ccba595ab9e32139fc02ab040dad03",
+     "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
+     "/OVERLAY/GSHELL.OVR": "a2dbd861e01e0075b4a16901461ec5a516e9c76c",
+     "/OVERLAY/LANG.OVR": "25aa41688fb482ea3cd9d0fccb88de9313638da8",
+     "/OVERLAY/LOCD.OVR": "76aca5d6376b1bf2d13b8982040c0d04edba7d4a",
+     "/OVERLAY/LOCF.OVR": "d3ebe07fa834b06735fb1dca69debaa5077f5ba9",
+     "/OVERLAY/SWAP.OVR": "8fb9849813876a3e4cd263da3f6548baf0ba18ef"
+    }
+   }
+  },
+  "exe_sha1": "a5784ca239ccba595ab9e32139fc02ab040dad03"
+ }
+}

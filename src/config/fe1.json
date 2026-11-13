@@ -1,0 +1,18 @@
+{
+  "name": "fe1",
+  "exe": "/SLUS_009.20",
+  "overlays": [
+    {"name": "GSHELL", "file": "/OVERLAY/GSHELL.OVR", "base": "800AF0A0"},
+    {"name": "LOCA", "file": "/OVERLAY/LOCA.OVR", "base": "800AF0A0"},
+    {"name": "LOCD", "file": "/OVERLAY/LOCD.OVR", "base": "800AF0A0", "disc": 2},
+    {"name": "LOCH", "file": "/OVERLAY/LOCH.OVR", "base": "800AF0A0", "disc": 2},
+    {"name": "LOCE", "file": "/OVERLAY/LOCE.OVR", "base": "800AF0A0", "disc": 3},
+    {"name": "LOCF", "file": "/OVERLAY/LOCF.OVR", "base": "800AF0A0", "disc": 4},
+    {"name": "LOCG", "file": "/OVERLAY/LOCG.OVR", "base": "800AF0A0", "disc": 4}
+  ],
+  "extra_seeds": [],
+  "asm_ranges": [["80057D30", "80058240"], ["800237F0", "80025424"]],
+  "_asm_ranges_note": "found by tools/match_code.py against FE2's: libpress DecDCTvlc (exact), the model renderer (ends match FE2's)",
+  "patchable_imm": ["80026CCC"],
+  "_patchable_imm_note": "boot module's next module (the remaster's test-start cheats patch it)"
+}

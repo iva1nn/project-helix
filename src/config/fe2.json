@@ -1,0 +1,92 @@
+{
+  "name": "fe2",
+  "exe": "/SLUS_012.66",
+  "overlays": [
+    {
+      "name": "GSHELL",
+      "file": "/OVERLAY/GSHELL.OVR",
+      "base": "800AF0C8"
+    },
+    {
+      "name": "LANG",
+      "file": "/OVERLAY/LANG.OVR",
+      "base": "800AF0C8"
+    },
+    {
+      "name": "LOCA",
+      "file": "/OVERLAY/LOCA.OVR",
+      "base": "800AF0C8"
+    },
+    {
+      "name": "LOCC",
+      "file": "/OVERLAY/LOCC.OVR",
+      "base": "800AF0C8"
+    },
+    {
+      "name": "CREDITS",
+      "file": "/OVERLAY/CREDITS.OVR",
+      "base": "800AF0C8"
+    },
+    {
+      "name": "SWAP",
+      "file": "/OVERLAY/SWAP.OVR",
+      "base": "800AF0C8"
+    },
+    {
+      "name": "LOCB",
+      "file": "/OVERLAY/LOCB.OVR",
+      "base": "800AF0C8",
+      "disc": 2
+    },
+    {
+      "name": "LOCH",
+      "file": "/OVERLAY/LOCH.OVR",
+      "base": "800AF0C8",
+      "disc": 2
+    },
+    {
+      "name": "LOCE",
+      "file": "/OVERLAY/LOCE.OVR",
+      "base": "800AF0C8",
+      "disc": 3
+    },
+    {
+      "name": "LOCI",
+      "file": "/OVERLAY/LOCI.OVR",
+      "base": "800AF0C8",
+      "disc": 3
+    },
+    {
+      "name": "LOCD",
+      "file": "/OVERLAY/LOCD.OVR",
+      "base": "800AF0C8",
+      "disc": 4
+    },
+    {
+      "name": "LOCF",
+      "file": "/OVERLAY/LOCF.OVR",
+      "base": "800AF0C8",
+      "disc": 4
+    }
+  ],
+  "extra_seeds": [
+    "8007596C",
+    "80075A2C",
+    "80075AB8"
+  ],
+  "asm_ranges": [
+    [
+      "8005BC20",
+      "8005C130"
+    ],
+    [
+      "80024F00",
+      "80026AFC"
+    ]
+  ],
+  "_asm_ranges_note": "hand-written asm compiled as one function each: libpress DecDCTvlc; the model renderer",
+  "patchable_imm": [
+    "80028A2C"
+  ],
+  "_patchable_imm_note": "boot module's next module (test-start cheats patch it)"
+}
