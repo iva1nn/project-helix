@@ -443,14 +443,17 @@ static int identify(uint32_t P, int buf, uint32_t mesh, int skin, int *part, uin
             else if (score == best && m != found && nties < 8) { tie_m[nties] = m; tie_q[nties] = q; tie_b[nties++] = bs; }
         }
     /* a faceless part: no packets to match, its own vertices in RAM name it (ties between tables: the twin rule
-     * below, by the RMD in RAM) */
-    for (int m = 0; found < 0 && !skin && !old_ident && m < nmodels; m++)
-        for (int q = 0; q < models[m].nparts && !models[m].variant; q++) {
-            const MPart *pq = &models[m].parts[q];
-            if (pq->nfaces || !pq->nverts || !verts_match(mesh, pq)) continue;
-            if (found < 0) { found = m; fpart = q; fbase = 0; best = 1; }
-            else if (m != found && nties < 8) { tie_m[nties] = m; tie_q[nties] = q; tie_b[nties++] = 0; }
-        }
+     * below, by the RMD in RAM). Every table is searched: until 14 Nov the loop stopped at the first table that
+     * matched, so a twin never became a tie and the first table took the part (FE1 Disc 4: Glas is GLAZ, but his
+     * faceless thigh roots 8 and 11 went to GLAS, two GLAS actors of one part each drew a second, offset Glas) */
+    if (found < 0 && !skin && !old_ident)
+        for (int m = 0; m < nmodels; m++)
+            for (int q = 0; q < models[m].nparts && !models[m].variant; q++) {
+                const MPart *pq = &models[m].parts[q];
+                if (pq->nfaces || !pq->nverts || !verts_match(mesh, pq)) continue;
+                if (found < 0) { found = m; fpart = q; fbase = 0; best = 1; }
+                else if (m != found && nties < 8) { tie_m[nties] = m; tie_q[nties] = q; tie_b[nties++] = 0; }
+            }
     if (dbg > 0 && found >= 0) { /* FE_DBG_MODELS: does the twin check find this part's RMD (any part, twin or not)? */
         uint32_t A = rmd_base_of(mesh);
         int nv = 0;
