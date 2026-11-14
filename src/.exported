@@ -1,5 +1,6 @@
 .gitattributes
 .gitignore
+HOW_IT_WORKS.md
 LICENSE
 README.md
 THIRD_PARTY.md

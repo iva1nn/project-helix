@@ -10,6 +10,8 @@ no emulator, remastered.
 - Widescreen fill, directional (camera-relative) controls, gamepad support
 - Save states, faster loading, automatic disc changes
 
+Curious how the characters stay steady without the PlayStation wobble? See **[How it works](HOW_IT_WORKS.md)**.
+
 > This repository contains **no game code and no game data**. The installer builds the game on your PC from
 > **your own discs**. The remastered assets are a separate download.
 
