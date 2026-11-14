@@ -41,8 +41,10 @@ static uint8_t poll_byte(int i) {
 }
 
 static void end_of_command(void) {
-    if (ds.cmd == 0x42 || (ds.cmd == 0x43 && !ds.config)) {
-        /* vibration from the poll parameters, through the 0x4D mapping */
+    if (ds.cmd == 0x42) {
+        /* vibration from the poll parameters, through the 0x4D mapping. Only the poll: both games enter config
+         * mode every 5 frames (0x43 01, 0x4D 00 01 FF.., 0x43 00) and that 01 sits in the small motor's slot, so
+         * reading 0x43 too buzzed every controller nonstop (project-helix issue #2) */
         int small = 0, large = 0;
         for (int i = 0; i < 6; i++) {
             if (ds.rumble_map[i] == 0x00) small = (ds.params[i] & 1);
