@@ -6,7 +6,11 @@
 #include <stdlib.h>
 #include "hw.h"
 
+#ifdef FE_NO_FOPEN_WRAP /* Linux builds with zig cc (its linker has no --wrap): no fopen tracing, ftrace() still works */
+#define __real_fopen fopen
+#else
 FILE *__real_fopen(const char *path, const char *mode);
+#endif
 
 static FILE *trace;
 static int trace_state; /* 0 not looked at, 1 on, -1 off */
@@ -22,6 +26,7 @@ void ftrace(const char *what, const char *path) {
     fflush(trace);
 }
 
+#ifndef FE_NO_FOPEN_WRAP
 FILE *__wrap_fopen(const char *path, const char *mode) {
     FILE *f = __real_fopen(path, mode);
     if (trace_state >= 0) {
@@ -31,3 +36,4 @@ FILE *__wrap_fopen(const char *path, const char *mode) {
     }
     return f;
 }
+#endif

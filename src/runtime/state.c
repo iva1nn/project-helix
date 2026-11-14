@@ -23,8 +23,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <time.h>
-#include <direct.h>
 #include <sys/stat.h>
+#include "port.h"
 #include "hw.h"
 #include "state.h"
 

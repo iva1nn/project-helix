@@ -1,4 +1,6 @@
 * text=auto
 # cmd.exe misreads labels and jumps in batch files with LF line ends
 *.bat text eol=crlf
+# and bash needs LF
+*.sh text eol=lf
 *.ttf binary

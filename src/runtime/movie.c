@@ -10,9 +10,20 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#ifdef _WIN32
 #include <windows.h>
 #include <io.h>
-#include <fcntl.h>
+#define FFMPEG_EXE "ffmpeg.exe"
+#else /* Linux / SteamOS: posix_spawn with pipes; a HANDLE is a pid (process) or a file descriptor (stdin) */
+#include <signal.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+typedef intptr_t HANDLE;
+extern char **environ;
+#define FFMPEG_EXE "ffmpeg"
+#endif
 #include "hw.h"
 
 typedef struct {
@@ -26,6 +37,33 @@ typedef struct {
 
 static Movie movies[64];
 static int nmovies;
+
+/* the decoder's output size: the 8x movies (2560x1280 = 8x of 320x160) as large as the upscaled VRAM holds them,
+ * 320 x scale by 160 x scale. At 4x (the Steam Deck) the full-size picture was decoded, converted and piped only to
+ * be shrunk to a quarter on upload; ffmpeg scaling it while converting is ~2x faster and loses nothing on screen
+ * (14 Nov 2026). FE_MOVIE_FULL=1 keeps the full size. */
+static int out_w(void) { extern int hw_scale; return getenv("FE_MOVIE_FULL") || hw_scale >= 8 ? 2560 : 320 * (hw_scale < 1 ? 1 : hw_scale); }
+static int out_h(void) { return out_w() / 2; }
+
+/* ffmpeg's threading: frame threads, half the CPU's threads (2-8). Slice threads (8, before 14 Nov 2026) gave the
+ * Steam Deck 57-62 pictures a second against a 60 fps movie's 60, and once behind the decoder stayed behind: every
+ * other picture of the A01 pull-back late, the background stepping during the camera move. Frame threads: 84-97 a
+ * second, caught up after the cut in every run. FE_MOVIE_THREADS / FE_MOVIE_THREAD_TYPE override (tests). */
+static const char *dec_threads(void) {
+    static char s[64];
+    const char *n = getenv("FE_MOVIE_THREADS"), *t = getenv("FE_MOVIE_THREAD_TYPE");
+    int c = SDL_GetCPUCount() / 2;
+    c = c < 2 ? 2 : c > 8 ? 8 : c;
+    if (n) c = atoi(n);
+    snprintf(s, sizeof s, "-threads %d -thread_type %s", c, t ? t : "frame");
+    return s;
+}
+static const char *dec_scale(int lead_comma) {
+    static char s[2][64];
+    if (out_w() >= 2560) return "";
+    snprintf(s[lead_comma], sizeof s[0], "%sscale=%d:%d:flags=bilinear", lead_comma ? "," : "-vf ", out_w(), out_h());
+    return s[lead_comma];
+}
 
 int movies_load(const char *dir) {
     for (int i = 0; i < nmovies; i++) free(movies[i].idx);
@@ -53,7 +91,7 @@ int movies_load(const char *dir) {
         m->idx = malloc((size_t)sz);
         m->n = (int)(fread(m->idx, 4, (size_t)sz / 4, fi));
         fclose(fi);
-        m->w = 2560; m->h = 1280; /* 8x of 320x160; checked when the decoder starts */
+        m->w = out_w(); m->h = out_h(); /* 8x of 320x160, or scaled down to the VRAM's scale (out_w) */
         nmovies++;
     }
     fclose(f);
@@ -109,6 +147,7 @@ static char ffmpeg[1100];
 
 /* ffmpeg started directly (no cmd.exe in between) with its stdout on a pipe; ended at once when not needed
  * (a room change must not wait for the old decoder to finish its frame). in: stdin on a pipe too. */
+#ifdef _WIN32
 static FILE *spawn_decoder(const char *cmdline, HANDLE *proc, HANDLE *in) {
     SECURITY_ATTRIBUTES sa = {sizeof sa, 0, TRUE};
     HANDLE rd, wr, ird = INVALID_HANDLE_VALUE, iwr = 0;
@@ -147,6 +186,81 @@ static void end_decoder(FILE *f, HANDLE proc) {
     if (f) fclose(f);
 }
 
+static int in_write(HANDLE in, const char *s) {
+    DWORD wrote;
+    return WriteFile(in, s, (DWORD)strlen(s), &wrote, 0) != 0;
+}
+static void in_close(HANDLE in) { CloseHandle(in); }
+#else
+/* the command line as the Windows path builds it: words, "quoted words" (quotes removed), nothing else escaped */
+static int split_args(char *s, char **argv, int max) {
+    int n = 0;
+    while (*s && n < max - 1) {
+        while (*s == ' ') s++;
+        if (!*s) break;
+        if (*s == '"') {
+            argv[n++] = ++s;
+            while (*s && *s != '"') s++;
+        } else {
+            argv[n++] = s;
+            while (*s && *s != ' ') s++;
+        }
+        if (*s) *s++ = 0;
+    }
+    argv[n] = 0;
+    return n;
+}
+
+static FILE *spawn_decoder(const char *cmdline, HANDLE *proc, HANDLE *in) {
+    static int sigpipe_off;
+    if (!sigpipe_off) { signal(SIGPIPE, SIG_IGN); sigpipe_off = 1; } /* a killed decoder's stdin must not end us */
+    char cl[2600], *argv[64];
+    snprintf(cl, sizeof cl, "%s", cmdline);
+    if (!split_args(cl, argv, 64)) return 0;
+    int out[2], inp[2] = {-1, -1};
+    SDL_LockMutex(spawn_mu);
+    if (pipe(out)) { SDL_UnlockMutex(spawn_mu); return 0; }
+    if (in && pipe(inp)) { close(out[0]); close(out[1]); SDL_UnlockMutex(spawn_mu); return 0; }
+    fcntl(out[0], F_SETFD, FD_CLOEXEC);
+    if (in) fcntl(inp[1], F_SETFD, FD_CLOEXEC);
+#ifdef F_SETPIPE_SZ
+    fcntl(out[0], F_SETPIPE_SZ, 1 << 20); /* a few frames in flight, as the Windows pipe's 4 MB buffer */
+#endif
+    posix_spawn_file_actions_t fa;
+    posix_spawn_file_actions_init(&fa);
+    if (in) posix_spawn_file_actions_adddup2(&fa, inp[0], 0);
+    else posix_spawn_file_actions_addopen(&fa, 0, "/dev/null", O_RDONLY, 0);
+    posix_spawn_file_actions_adddup2(&fa, out[1], 1);
+    posix_spawn_file_actions_addopen(&fa, 2, "/dev/null", O_WRONLY, 0);
+    pid_t pid;
+    int err = posix_spawnp(&pid, argv[0], &fa, 0, argv, environ);
+    posix_spawn_file_actions_destroy(&fa);
+    close(out[1]);
+    if (in) close(inp[0]);
+    SDL_UnlockMutex(spawn_mu);
+    if (err) { close(out[0]); if (in) close(inp[1]); return 0; }
+    *proc = pid;
+    if (in) *in = inp[1];
+    return fdopen(out[0], "rb");
+}
+
+static void end_decoder(FILE *f, HANDLE proc) {
+    if (proc) { kill((pid_t)proc, SIGKILL); waitpid((pid_t)proc, 0, 0); }
+    if (f) fclose(f);
+}
+
+static int in_write(HANDLE in, const char *s) {
+    size_t n = strlen(s);
+    while (n) {
+        ssize_t w = write((int)in, s, n);
+        if (w <= 0) return 0;
+        s += w; n -= (size_t)w;
+    }
+    return 1;
+}
+static void in_close(HANDLE in) { close((int)in); }
+#endif
+
 /* frames decoded ahead of the wanted one: 12 STR frames' worth, at most half the cache (a 60 fps movie: 48) */
 static int ahead_of(int m) {
     int a = AHEAD * movies[m].rate;
@@ -184,14 +298,20 @@ static int decoder_main(void *arg) {
             sb_out = 0; sb_proc = sb_in = 0;
             if (nf) SDL_CondSignal(sb_cv);
             char cmd[2600];
-            if (nf) { /* concat list; the path inside '' is taken literally, only ' needs escaping */
+            if (nf) { /* concat list; the path inside '' is taken literally, only ' needs escaping. Linux: "file:" in
+                       * front, else the list's own URL (pipe:0) is put before the absolute path ("pipe:/home/..."); a
+                       * Windows path's drive letter already reads as an absolute URL */
+#ifdef _WIN32
                 int n = snprintf(cmd, sizeof cmd, "ffconcat version 1.0\nfile '");
+#else
+                int n = snprintf(cmd, sizeof cmd, "ffconcat version 1.0\nfile 'file:");
+#endif
                 for (const char *p = movies[m].path; *p && n < (int)sizeof cmd - 64; p++)
                     n += *p == '\'' ? snprintf(cmd + n, sizeof cmd - n, "'\\''") : (cmd[n] = *p == '\\' ? '/' : *p, 1);
                 snprintf(cmd + n, sizeof cmd - n, "'\ninpoint %.4f\n", ss);
             } else
-                snprintf(cmd, sizeof cmd, "\"%s\" -v error -nostdin -threads 8 -thread_type slice -ss %.4f -i \"%s\" -f rawvideo -pix_fmt bgra -",
-                         ffmpeg, ss, movies[m].path);
+                snprintf(cmd, sizeof cmd, "\"%s\" -v error -nostdin %s -ss %.4f -i \"%s\" %s -f rawvideo -pix_fmt bgra -",
+                         ffmpeg, dec_threads(), ss, movies[m].path, dec_scale(0));
             ftrace("exec", ffmpeg);
             ftrace("ffmpeg-input", movies[m].path);
             /* unlocked: starting a process takes long enough (100-300 ms seen) to stall the game's frame, which
@@ -200,9 +320,8 @@ static int decoder_main(void *arg) {
             SDL_UnlockMutex(mu);
             if (old) end_decoder(old, oldp);
             if (nf) {
-                DWORD wrote;
-                if (!WriteFile(nin, cmd, (DWORD)strlen(cmd), &wrote, 0)) { end_decoder(nf, np); nf = 0; }
-                CloseHandle(nin);
+                if (!in_write(nin, cmd)) { end_decoder(nf, np); nf = 0; }
+                in_close(nin);
             }
             int warm = nf != 0;
             if (!nf) nf = spawn_decoder(cmd, &np, 0);
@@ -281,8 +400,8 @@ static int decoder_main(void *arg) {
 static int standby_main(void *arg) {
     (void)arg;
     char cmd[2600];
-    snprintf(cmd, sizeof cmd, "\"%s\" -v error -nostdin -threads 8 -thread_type slice -protocol_whitelist file,pipe -copyts -f concat -safe 0 "
-             "-i pipe:0 -vf select=gte(t\\,0) -f rawvideo -pix_fmt bgra -", ffmpeg);
+    snprintf(cmd, sizeof cmd, "\"%s\" -v error -nostdin %s -protocol_whitelist file,pipe -copyts -f concat -safe 0 "
+             "-i pipe:0 -vf select=gte(t\\,0)%s -f rawvideo -pix_fmt bgra -", ffmpeg, dec_threads(), dec_scale(1));
     SDL_LockMutex(mu);
     for (;;) {
         while (sb_out) SDL_CondWait(sb_cv, mu);
@@ -310,17 +429,17 @@ static void start_decoder(void) {
     char *base = SDL_GetBasePath();
     FILE *t = 0;
     if (fe_data[0]) {
-        snprintf(ffmpeg, sizeof ffmpeg, "%s/ffmpeg.exe", fe_data);
+        snprintf(ffmpeg, sizeof ffmpeg, "%s/" FFMPEG_EXE, fe_data);
         t = fopen(ffmpeg, "rb");
     }
     if (!t) {
-        snprintf(ffmpeg, sizeof ffmpeg, "%sffmpeg.exe", base ? base : "");
+        snprintf(ffmpeg, sizeof ffmpeg, "%s" FFMPEG_EXE, base ? base : "");
         t = fopen(ffmpeg, "rb");
     }
     if (base) SDL_free(base);
     if (t) fclose(t);
     else snprintf(ffmpeg, sizeof ffmpeg, "ffmpeg");
-    LOG("movies: decoder %s\n", ffmpeg);
+    LOG("movies: decoder %s, pictures %dx%d, %s\n", ffmpeg, out_w(), out_h(), dec_threads());
     mu = SDL_CreateMutex(); cv = SDL_CreateCond(); sb_cv = SDL_CreateCond(); spawn_mu = SDL_CreateMutex();
     thr = SDL_CreateThread(decoder_main, "movies", 0);
     if (!getenv("FE_MOVIE_NO_STANDBY")) sb_thr = SDL_CreateThread(standby_main, "movie-standby", 0);

@@ -6,14 +6,19 @@ Output: build/fe2port.exe (+ SDL2.dll). Uses w64devkit gcc (F:/tools/w64devkit) 
 The exe's icon and version information: icons/<game>port.rc (icons/<game>.ico, tools/make_icons.py), compiled with
 the same toolchain's windres and linked in.
 """
-import argparse, os, shutil, subprocess, sys
+import argparse, os, shlex, shutil, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-GCC = os.environ.get("FE_GCC", "F:/tools/w64devkit/bin/gcc.exe")
+WINDOWS = os.name == "nt"
+# Linux / SteamOS (the standalone install.sh): FE_GCC is a compiler command ("zig cc" works), FE_SDL2_INC a folder
+# holding SDL2/SDL.h, FE_LIBS the libraries linked by path (SteamOS's own libSDL2-2.0.so.0, libGL.so.1); no icon
+GCC = os.environ.get("FE_GCC", "F:/tools/w64devkit/bin/gcc.exe" if WINDOWS else "cc")
+CC = shlex.split(GCC) if not WINDOWS else [GCC]
 WINDRES = os.environ.get("FE_WINDRES", str(Path(GCC).with_name("windres.exe")))
 SDL = Path(os.environ.get("FE_SDL2", "F:/tools/sdl2/SDL2-2.30.9/x86_64-w64-mingw32"))
+SDL_INC = Path(os.environ["FE_SDL2_INC"]) if os.environ.get("FE_SDL2_INC") else SDL / "include"
 
 ap = argparse.ArgumentParser()
 ap.add_argument("--disc", required=True, action="append",
@@ -72,8 +77,9 @@ if args.regen or not (gen / "files.txt").exists():
 srcs = [gen / f for f in (gen / "files.txt").read_text().split()]
 srcs += sorted((ROOT / "runtime").glob("*.c"))
 cflags = ["-O1" if args.debug else args.opt, "-g" if args.debug else "-g0", "-fno-strict-aliasing", "-fwrapv", "-I", str(ROOT / "runtime"), "-I", str(gen),
-          "-I", str(SDL / "include"), "-Wall", "-Wno-unused-label", "-Wno-unused-variable", "-Wno-unused-but-set-variable",
-          "-Wno-misleading-indentation", '-DFE_GAME="%s"' % game] + (["-DFE_WATCH"] if args.watch else [])
+          "-I", str(SDL_INC), "-Wall", "-Wno-unused-label", "-Wno-unused-variable", "-Wno-unused-but-set-variable",
+          "-Wno-misleading-indentation", '-DFE_GAME="%s"' % game] + (["-DFE_WATCH"] if args.watch else []) + (
+          [] if WINDOWS else ["-DFE_NO_FOPEN_WRAP"])
 # the port build named in save states (runtime/state.c): the commit, + "+" when the working tree has changes
 try:
     _rev = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
@@ -90,7 +96,7 @@ def cc(src):
     if not stamp and o.exists() and o.stat().st_mtime > src.stat().st_mtime and all(
             o.stat().st_mtime > h.stat().st_mtime for h in list((ROOT / "runtime").glob("*.h")) + [gen / "funcs.h"]):
         return o, None
-    r = subprocess.run([GCC, *cflags, *(cflags_state if stamp else []), "-c", str(src), "-o", str(o)], capture_output=True,
+    r = subprocess.run([*CC, *cflags, *(cflags_state if stamp else []), "-c", str(src), "-o", str(o)], capture_output=True,
                        text=True)
     return o, (r.stdout + r.stderr) if r.returncode else (r.stderr or None)
 
@@ -106,6 +112,13 @@ for (o, msg), src in zip(results, srcs):
             failed = True
 if failed:
     sys.exit("compile failed")
+if not WINDOWS:
+    # Linux: the system's SDL2 and OpenGL (FE_LIBS: paths or -l names), no icon resource, no DLL to copy
+    exe = build / (game + "port")
+    libs = shlex.split(os.environ.get("FE_LIBS", "-lSDL2 -lGL"))
+    subprocess.check_call([*CC, *[str(o) for o, _ in results], "-o", str(exe), *libs, "-lm", "-lpthread", "-ldl"])
+    print("built", exe)
+    sys.exit(0)
 # the icon (resource 1) and version information; windres runs in icons/ so the .rc names the .ico plainly
 rc = ROOT / "icons" / (game + "port.rc")
 res = obj / (game + "port_res.o")

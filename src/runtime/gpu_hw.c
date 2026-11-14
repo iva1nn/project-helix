@@ -2002,7 +2002,7 @@ static int mesh_box(const HwMesh *m, const float *bones, int nbones, float h, fl
      * moves it out by another x / h of that): the widest of the inner, silhouette and minimum widths, doubled */
     float k = models_ink_inner > models_ink_sil ? models_ink_inner : models_ink_sil;
     if (k < 1.0f) k = 1.0f;
-    float w = models_outline_px * k, wm = models_ink_min / (float)hw_scale * 1.4f;
+    float w = models_outline_px * k, wm = models_ink_min / 8.0f * 1.4f; /* as hw_mesh_draw's minimum */
     if (w < wm) w = wm;
     float pad = 2.0f * w * (1.0f + 1024.0f / h) + 2.0f;
     box[0] = bx0 - pad; box[1] = by0 - pad; box[2] = bx1 + pad; box[3] = by1 + pad;
@@ -2141,7 +2141,9 @@ void hw_mesh_draw(HwMesh *m, const float *bones, int nbones, const uint32_t *col
         /* MFIX_INK: two hulls. Inner lines (an arm over the body, folds): thin, as the old single hull. The
          * silhouette against the room: thicker, drawn only where no body is (stencil 0). Both at least ~1.5 screen
          * pixels wide (u_fix2.x, native pixels), so a far character keeps a line, and thinner with distance above it. */
-        float minpx = models_ink_min / (float)S;
+        /* the minimum is set for 8x and kept in native pixels at every scale: at 4x the same 1.5 internal pixels were
+         * twice as wide on a character and turned far ones black (Steam Deck, 14 Nov 2026) */
+        float minpx = models_ink_min / 8.0f;
         glStencilMask(0x00);
         glDisable(GL_STENCIL_TEST);
         glUniform4f(um_fix2, minpx, 0, 0, 0);

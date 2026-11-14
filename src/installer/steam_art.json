@@ -1,0 +1,28 @@
+{
+ "_note": "Steam library artwork from SteamGridDB (steamgriddb.com), downloaded at install time and checked by SHA-256. Chosen 14 Nov 2026: per type the most-hearted, then most-downloaded static image. Fear Effect's only hero has the title painted in, so it gets no separate logo (Steam would draw the title twice).",
+ "fe1": {
+  "portrait": {"url": "https://cdn2.steamgriddb.com/grid/2727a2469eecb0215b3ed62b3bbb14ec.png", "size": 2183210,
+               "sha256": "ba8b30935da3d24c25bfcd85e907dc5a393d51a35e38e62722141e889e15567e",
+               "credit": "Obdulio, steamgriddb.com/grid/57962"},
+  "wide": {"url": "https://cdn2.steamgriddb.com/grid/8a048c6ab20ea5816814f7757799def4.png", "size": 165718,
+           "sha256": "23f1ac93326041aae772e1d9fe2a3ec787ee4041e14ba4c6e74965661b948a3c",
+           "credit": "steamgriddb.com/grid/692721"},
+  "hero": {"url": "https://cdn2.steamgriddb.com/hero/9715d04413f296eaf3c30c47cec3daa6.png", "size": 894251,
+           "sha256": "781d9a84dddbde1a9530f55bbde35e2b29bf4bd38fd7824606c16c4aab015120",
+           "credit": "RealSayakaMaizono, steamgriddb.com/hero/5764"}
+ },
+ "fe2": {
+  "portrait": {"url": "https://cdn2.steamgriddb.com/grid/e91fba7eb422ffc12f8c1eb867844025.png", "size": 2335475,
+               "sha256": "93a88f7c39cf70eba287de15de349c1b2af13594592817ccd78f7497ab970fef",
+               "credit": "Obdulio, steamgriddb.com/grid/57971"},
+  "wide": {"url": "https://cdn2.steamgriddb.com/grid/d2d26584b4ffbf0de1af4a7e9ecf3b68.png", "size": 187813,
+           "sha256": "84d245675df2c3502e2316bc0b77ca97d8eb26291fac1efbfc5a7b2ac44e0afb",
+           "credit": "Wolfy, steamgriddb.com/grid/27505"},
+  "hero": {"url": "https://cdn2.steamgriddb.com/hero/8b10a9280bd46b8874af9b5cadec91d5.png", "size": 800450,
+           "sha256": "c957ae8839110f5c6e0f9d9115b905916d17a889aaa81bb63acdbeb538f845be",
+           "credit": "RealSayakaMaizono, steamgriddb.com/hero/5765"},
+  "logo": {"url": "https://cdn2.steamgriddb.com/logo/f056bfa71038e04a2400266027c169f9.png", "size": 219550,
+           "sha256": "3b4edf87661ed23b4b57f3453fcb8e8b36081a0c4bbac23e0b852c9eddabea46",
+           "credit": "RealSayakaMaizono, steamgriddb.com/logo/6939"}
+ }
+}

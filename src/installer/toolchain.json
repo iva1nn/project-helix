@@ -1,31 +1,55 @@
 {
- "_note": "Pinned downloads (official release files; SHA-256 checked). Python itself is fetched by install.bat.",
- "w64devkit": {
-  "url": "https://github.com/skeeto/w64devkit/releases/download/v2.11.0/w64devkit-x64-2.11.0.7z.exe",
-  "size": 68801240,
-  "sha256": "54c2bb9962e8a30c8270e34c5efc3d5fee579f53087fa7d435b95fbba2af7b2b",
-  "kind": "7z-sfx",
-  "root": "w64devkit",
-  "check": "w64devkit/bin/gcc.exe",
-  "license": "public domain (w64devkit) + GPL/LGPL components (GCC, binutils), mingw-w64 runtime"
+ "_note": "Pinned downloads per system (official release files; SHA-256 checked). Windows: Python itself is fetched by install.bat. Linux / SteamOS: the system's python3, SDL2, OpenGL and ffmpeg are used.",
+ "windows": {
+  "w64devkit": {
+   "url": "https://github.com/skeeto/w64devkit/releases/download/v2.11.0/w64devkit-x64-2.11.0.7z.exe",
+   "size": 68801240,
+   "sha256": "54c2bb9962e8a30c8270e34c5efc3d5fee579f53087fa7d435b95fbba2af7b2b",
+   "kind": "7z-sfx",
+   "root": "w64devkit",
+   "check": "w64devkit/bin/gcc.exe",
+   "license": "public domain (w64devkit) + GPL/LGPL components (GCC, binutils), mingw-w64 runtime"
+  },
+  "sdl2": {
+   "url": "https://github.com/libsdl-org/SDL/releases/download/release-2.30.9/SDL2-devel-2.30.9-mingw.tar.gz",
+   "mirrors": ["https://www.libsdl.org/release/SDL2-devel-2.30.9-mingw.tar.gz"],
+   "size": 7423223,
+   "sha256": "b188d165dc4a0372042bff3d0c18e9bb90772581e92a7b8b47b521b47714f75c",
+   "kind": "tar.gz",
+   "prefix": "SDL2-2.30.9/x86_64-w64-mingw32",
+   "check": "SDL2-2.30.9/x86_64-w64-mingw32/bin/SDL2.dll",
+   "license": "zlib"
+  },
+  "ffmpeg": {
+   "url": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.1/ffmpeg-9.0.1-essentials_build.zip",
+   "size": 111253802,
+   "sha256": "fec81ae03971d9dd4be3ebe02e263bd2ec1d789483f931bdba5f5715e65da2e9",
+   "kind": "zip",
+   "only": ["/bin/ffmpeg.exe", "/LICENSE"],
+   "check": "ffmpeg-9.0.1-essentials_build/bin/ffmpeg.exe",
+   "license": "GPL-3.0 (gyan.dev essentials build)"
+  }
  },
- "sdl2": {
-  "url": "https://github.com/libsdl-org/SDL/releases/download/release-2.30.9/SDL2-devel-2.30.9-mingw.tar.gz",
-  "mirrors": ["https://www.libsdl.org/release/SDL2-devel-2.30.9-mingw.tar.gz"],
-  "size": 7423223,
-  "sha256": "b188d165dc4a0372042bff3d0c18e9bb90772581e92a7b8b47b521b47714f75c",
-  "kind": "tar.gz",
-  "prefix": "SDL2-2.30.9/x86_64-w64-mingw32",
-  "check": "SDL2-2.30.9/x86_64-w64-mingw32/bin/SDL2.dll",
-  "license": "zlib"
- },
- "ffmpeg": {
-  "url": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.1/ffmpeg-9.0.1-essentials_build.zip",
-  "size": 111253802,
-  "sha256": "fec81ae03971d9dd4be3ebe02e263bd2ec1d789483f931bdba5f5715e65da2e9",
-  "kind": "zip",
-  "only": ["/bin/ffmpeg.exe", "/LICENSE"],
-  "check": "ffmpeg-9.0.1-essentials_build/bin/ffmpeg.exe",
-  "license": "GPL-3.0 (gyan.dev essentials build)"
+ "linux": {
+  "zig": {
+   "url": "https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz",
+   "size": 55478392,
+   "sha256": "70e49664a74374b48b51e6f3fdfbf437f6395d42509050588bd49abe52ba3d00",
+   "kind": "tar.xz",
+   "root": "zig-x86_64-linux-0.16.0",
+   "check": "zig-x86_64-linux-0.16.0/zig",
+   "license": "MIT (Zig), its bundled libc headers under their own licences"
+  },
+  "sdl2_headers": {
+   "url": "https://github.com/libsdl-org/SDL/releases/download/release-2.30.9/SDL2-2.30.9.tar.gz",
+   "mirrors": ["https://www.libsdl.org/release/SDL2-2.30.9.tar.gz"],
+   "size": 7681555,
+   "sha256": "24b574f71c87a763f50704bbb630cbe38298d544a1f890f099a4696b1d6beba4",
+   "kind": "tar.gz",
+   "only": ["SDL2-2.30.9/include/"],
+   "root": "SDL2-2.30.9/include",
+   "check": "SDL2-2.30.9/include/SDL.h",
+   "license": "zlib (headers only; the game uses the system's SDL2 library)"
+  }
  }
 }

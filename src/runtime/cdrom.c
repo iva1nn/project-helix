@@ -1,6 +1,7 @@
 /* CD-ROM controller (register level) reading the user's .cue/.bin image. */
 #include <stdlib.h>
 #include <ctype.h>
+#include "port.h"
 #include "hw.h"
 #include "props.h"
 

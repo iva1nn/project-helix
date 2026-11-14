@@ -3,9 +3,8 @@
 #define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <stdlib.h>
-#include <direct.h>
-#include <io.h>
 #include <sys/stat.h>
+#include "port.h"
 #include "hw.h"
 #include "models.h"
 #include "props.h"
@@ -82,6 +81,16 @@ static double audio_queue_ms(void) {
     return audio_dev ? SDL_GetQueuedAudioSize(audio_dev) / (44100.0 * 4) * 1000.0 : 0;
 }
 
+/* the audio queue the frame limiter keeps (ms): ini audio_latency, else 60, on a Steam Deck 100 */
+static int audio_target_ms;
+static double audio_target(void) {
+    if (audio_target_ms <= 0) {
+        extern int input_is_steam_deck(void);
+        audio_target_ms = input_is_steam_deck() ? 100 : 60;
+    }
+    return (double)audio_target_ms;
+}
+
 static void audio_frame(void) {
     static int16_t buf[4096 * 2];
     int n;
@@ -92,6 +101,19 @@ static void audio_frame(void) {
         if (audio_dev) {
             /* the frame limiter keeps the queue near its target; drop only if it ever runs far ahead */
             uint32_t q = SDL_GetQueuedAudioSize(audio_dev);
+            if (q == 0) {
+                /* empty: at the start, after a load, or a gap that is already audible. Refill to most of the target
+                 * at once with silence (the limiter's 0.5 % nudge needs ~10 s per 50 ms), so one slow frame after
+                 * another does not make a gap each (Steam Deck, 14 Nov 2026) */
+                static int16_t zero[4410 * 2];
+                uint32_t want = (uint32_t)(audio_target() * 0.8 * 44.1) * 4;
+                while (want > 0) {
+                    uint32_t c = want > sizeof zero ? (uint32_t)sizeof zero : want;
+                    SDL_QueueAudio(audio_dev, zero, c);
+                    want -= c;
+                }
+                q = SDL_GetQueuedAudioSize(audio_dev);
+            }
             if (q < 44100 * 4 / 4) SDL_QueueAudio(audio_dev, buf, (uint32_t)n * 4);
             else perf_drops++;
         }
@@ -301,10 +323,12 @@ static void pace(void) {
         uint64_t freq = SDL_GetPerformanceFrequency();
         uint64_t now = SDL_GetPerformanceCounter();
         /* pace at the game's own frame rate, nudged by the audio queue so that sound is never
-         * dropped or starved: target 60 ms queued, at most 0.5 % faster or slower */
+         * dropped or starved: target audio_target_ms queued (60, Steam Deck 100: its PipeWire takes 23 ms at a time,
+         * so a 60 ms target swung down to ~10 ms and one slow frame emptied it; ini audio_latency), at most 0.5 %
+         * faster or slower */
         double rate = (double)CPU_HZ / (double)CYCLES_PER_FRAME;
         if (audio_dev) {
-            double err = (audio_queue_ms() - 60.0) / 60.0;
+            double err = (audio_queue_ms() - audio_target()) / audio_target();
             if (err > 1) err = 1;
             if (err < -1) err = -1;
             rate *= 1.0 - 0.005 * err;
@@ -703,6 +727,7 @@ static void load_settings(void) {
         else if (!strcmp(k, "fill")) { extern int hw_fill_mode; hw_fill_mode = atoi(v); }
         else if (!strcmp(k, "models")) models_on = atoi(v);
         else if (!strcmp(k, "smooth")) smooth_on = atoi(v);
+        else if (!strcmp(k, "audio_latency") && v[0]) audio_target_ms = atoi(v) < 20 ? 20 : atoi(v) > 300 ? 300 : atoi(v);
         else if (!strcmp(k, "model_fix")) { extern int model_fix; model_fix = (int)strtol(v, 0, 0); }
         else if (!strcmp(k, "volume")) audio_volume = atoi(v);
         else if (!strcmp(k, "bloom")) fx_bloom = atoi(v);

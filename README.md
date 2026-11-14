@@ -1,6 +1,7 @@
 # Fear Effect — native PC port
 
-**Fear Effect** and **Fear Effect 2: Retro Helix**, running natively on Windows with no emulator, remastered.
+**Fear Effect** and **Fear Effect 2: Retro Helix**, running natively on Windows and **Steam Deck / SteamOS** with
+no emulator, remastered.
 
 🎬 **See the remaster in action: [feremaster.us](https://feremaster.us/)**
 
@@ -16,7 +17,8 @@
 
 ## What you need
 
-- **Windows 10 or 11** (64-bit) and a graphics card with OpenGL 3.3
+- **Windows 10 or 11** (64-bit) and a graphics card with OpenGL 3.3, **or a Steam Deck** (SteamOS 3; see
+  [Steam Deck / SteamOS](#steam-deck--steamos))
 - **Your own disc images:** all four discs of the game, USA version (see [Supported discs](#supported-discs))
 - **The asset pack** for your game (see [Asset packs](#asset-packs))
 - **Free disk space:** about 21 GB for Fear Effect, 33 GB for Fear Effect 2, plus room for the archive while you
@@ -33,6 +35,7 @@ with plain letters, such as `C:\Games\FearEffect`.
 ```
 C:\Games\FearEffect\
 ├── install.bat         ← you run this in step 3
+├── install.sh          ← the same, on Steam Deck / SteamOS
 ├── discs\
 │   ├── fe1\            ← your Fear Effect disc images (all 4)
 │   └── fe2\            ← your Fear Effect 2 disc images (all 4)
@@ -51,6 +54,51 @@ from your discs, tests it and creates shortcuts. The first run takes a few minut
 **4. Play** from the *Fear Effect* or *Fear Effect 2 - Retro Helix* shortcut on your Desktop or in the Start menu.
 
 > If Windows shows *"Windows protected your PC"* when you start `install.bat`, click **More info → Run anyway**.
+
+## Steam Deck / SteamOS
+
+The same folder works on a Steam Deck (SteamOS 3; tested on SteamOS 3.9). You install in **Desktop Mode** (hold the
+power button → *Switch to Desktop*) and play in Game Mode. Nothing is installed into SteamOS itself: the installer
+uses SteamOS's own SDL2, OpenGL, ffmpeg and Python.
+
+**You need:** about 21 GB of free space for Fear Effect and 33 GB for Fear Effect 2 (internal storage or an SD card),
+your own disc images, the asset pack(s), and internet once (about 65 MB of build tools).
+
+1. **Get this repository:** in a browser, *Code → Download ZIP*, then in Dolphin (the file manager) right-click the
+   ZIP → *Extract → Extract archive here*. Move the folder somewhere of your own, for example `~/Games/FearEffect`.
+   (Or `git clone` it.)
+2. **Add your discs and the asset pack** exactly as in [Install](#install), step 2. Dolphin extracts the `.7z` pack
+   the same way: right-click it → *Extract → Extract archive here*, inside the `FearEffect` folder.
+3. **Double-click `install.sh`** and choose *Execute*. A terminal window opens and shows the progress. If Dolphin
+   only offers to open it as text, open a terminal in the folder (*F4* in Dolphin) and type `bash install.sh`.
+   The first run downloads a C compiler (Zig) and SDL2's headers, builds the games from your discs (about a minute
+   each) and makes launchers in the app menu and on the Desktop.
+4. **The installer adds the games to your Steam library** with cover art, banner and logo from SteamGridDB. Steam
+   has to close for a moment, so the installer asks first. It keeps a backup of your list of non-Steam games, starts
+   Steam again and checks a minute later that Steam kept everything; if Steam ever drops an entry, it puts your list
+   back as it was and asks you to add the games yourself (Steam → *Games → Add a Non-Steam Game to My Library*,
+   tick *Fear Effect* and/or *Fear Effect 2 - Retro Helix*). `bash install.sh --no-steam` skips this step.
+5. **Play in Game Mode:** *Library → Non-Steam*. Quit with the Steam button → *Exit game*.
+
+**Controls on the Deck:**
+
+| Control | Does |
+|---|---|
+| Menu (☰), face buttons, bumpers, triggers, d-pad, sticks | the game's own buttons |
+| View (⧉), tap | remaster on / off |
+| hold View + R1 / L1 | save / load state |
+| hold View + R2 / L2 | next / previous state slot |
+| L3 / R3 | directional ↔ original tank controls / screen layout |
+
+Start the games from **Steam** (also in Desktop Mode): Steam then hands the controls to the game as a gamepad.
+Started from the desktop launcher, Steam's desktop layout turns them into a keyboard and mouse.
+
+**Settings on the Deck:** the game detects the Deck and starts with settings made for it: 4x resolution (sharp on
+the Deck's screen and lighter on its GPU), softer picture effects and a larger sound buffer. They are in
+`Fear Effect/fe1port.ini` and `Fear Effect 2/fe2port.ini` (all options: `SETTINGS.txt` next to them).
+
+**Updating** works as on Windows ([Updating](#updating)), with `bash install.sh` in place of `install.bat`; run it in
+Desktop Mode.
 
 ---
 
@@ -135,6 +183,13 @@ install.bat --rebuild        rebuild the game from scratch
 install.bat --no-shortcuts   don't create Desktop / Start menu shortcuts
 ```
 
+The same options work with `bash install.sh` on SteamOS, plus:
+
+```
+bash install.sh --no-steam   don't add the games to the Steam library
+bash install.sh --yes        close Steam without asking when the library step needs it
+```
+
 </details>
 
 <details>
@@ -148,6 +203,13 @@ Exact versions, checked by SHA-256, kept in `.toolchain\`:
 | w64devkit 2.11.0 (GCC) | compiles the game from your discs | github.com/skeeto/w64devkit |
 | SDL2 2.30.9 | window, sound, controllers | github.com/libsdl-org/SDL |
 | FFmpeg 9.0.1 (essentials) | plays the remastered movies | github.com/GyanD/codexffmpeg |
+
+On SteamOS only two files are downloaded; Python, SDL2, OpenGL and ffmpeg come with the system:
+
+| Tool | Why | From |
+|---|---|---|
+| Zig 0.16.0 | compiles the game from your discs (used as a C compiler) | ziglang.org |
+| SDL2 2.30.9 source (headers only) | lets the game compile against the system's SDL2 | github.com/libsdl-org/SDL |
 
 </details>
 

@@ -53,6 +53,7 @@ One file per exe, **next to the exe** (`SDL_GetBasePath`), named after the game:
 | `grain_rows` | float | 640 | Grain size (rows of grain over the screen height). Not in the default file. |
 | `grain_refresh` | float | 24 | Grain pattern changes per second. Not in the default file. |
 | `loop_fade` | movie frames (15 per second), 0 = hard cut | 8 | Room loops: the end of the loop dissolves into its start over this many frames. The user runs 4. |
+| `audio_latency` | ms, 20-300 | 60 (Steam Deck 100) | Sound kept queued by the frame limiter. More rides out slow frames without a gap in the sound, at the cost of sound slightly behind the picture. Not in the default file. |
 | `scene_look` | a look name from actors.txt | `b` | Which tagged scene-actor lines draw (actors.txt `look=NAME`; the cog wheels' `b` (pre-rendered + HYPIR sprites, the user's pick, the default), `current` (the 5 Nov meshes), `a` (shader look), `c` (the dead soldiers' painted look); a name no line has, e.g. `off`, hides them all; with no `b` line in actors.txt `current`, with neither the first look it names). `Ctrl+F6` cycles the looks live in actors.txt order (b, current, a, c), `--scene-look NAME` and `FE_SCENE_LOOK` (wins over both) set it. Not in the default file. |
 | `movie_60fps` | 0 / 1 | 1 | 60 fps room movies (a `movies.txt` line with a rate, NOTES.md "60 fps room movies") show their in-between pictures; 0 = only the STR frames' own pictures (15 fps). Not in the default file. |
 | `movie_cam_fix` | 0 / 1 | 1 | In a camera move, the game's 3D characters are drawn with the camera of the movie picture on screen (`cam_tracks.txt` in the models folder, NOTES.md "60 fps room movies: camera-move scan"), so they glide with a 60 fps background instead of stepping once per movie frame; 0 = the game's own camera. Not in the default file. |
@@ -103,6 +104,16 @@ leftshoulder rightshoulder dpup dpdown dpleft dpright misc1 touchpad paddle1-4`,
 
 The port's actions (`act_*`) do not fire from the keyboard while Shift, Ctrl or Alt is held (Shift+F8 and Alt+Enter
 are fixed keys). Inis written before 4 Nov have no `act_state_*` lines: the defaults above apply.
+
+Controller combos: two names joined by `+`, e.g. `act_state_save = back+rightshoulder` (hold View / Select, press
+R1). While the first button is held, the second one does not reach the game. An action bound to the first button
+alone (`act_remaster = back`) then fires when that button is released, and only if no combo was used during the hold.
+
+**Steam Deck** (Linux, detected from the board name Valve Jupiter / Galileo or `SteamDeck=1`): a new settings file gets
+`act_remaster = back`, `act_state_save = back+rightshoulder`, `act_state_load = back+leftshoulder`,
+`act_state_next = back+righttrigger`, `act_state_prev = back+lefttrigger`, `act_fullscreen` empty, and in `[game]`
+`scale = 4`, `bloom_intensity = 0.50`, `vignette_strength = 0.50`, `grain_strength = 0.50`, `loop_fade = 4`. An existing
+file is kept as it is.
 
 Extra keys of `[controller]`:
 

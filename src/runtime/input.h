@@ -27,4 +27,5 @@ void input_bind_defaults(int pad);
 void input_save(void);
 void settings_set(const char *key, const char *value); /* one key of the settings file's [game] section */
 int input_has_controller(void);
+int input_is_steam_deck(void); /* Linux: a Steam Deck (its defaults for a new settings file) */
 #endif

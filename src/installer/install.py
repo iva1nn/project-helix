@@ -33,8 +33,10 @@ LOG = ROOT / "install.log"
 sys.path.insert(0, str(SRC / "tools" / "recomp"))
 from disc import Disc  # noqa: E402
 
+WINDOWS = os.name == "nt"
 GAMES = json.loads((HERE / "games.json").read_text(encoding="utf-8"))
-TOOLS = json.loads((HERE / "toolchain.json").read_text(encoding="utf-8"))
+TOOLS = json.loads((HERE / "toolchain.json").read_text(encoding="utf-8"))["windows" if WINDOWS else "linux"]
+EXE = ".exe" if WINDOWS else ""
 # the published asset packs (tools/export_standalone.py --pack): manifest and archive checksums, per game
 PACKS = json.loads((HERE / "packs.json").read_text(encoding="utf-8")) if (HERE / "packs.json").exists() else {}
 SECTOR = 2352
@@ -45,6 +47,10 @@ _log = None
 
 def say(*a):
     msg = " ".join(str(x) for x in a)
+    if not WINDOWS:  # the messages are written for Windows: the script's name, folder separators, example path
+        msg = msg.replace("install.bat", "install.sh").replace("C:\\Games\\FearEffect", "~/Games/FearEffect")
+        msg = msg.replace("\\", "/")
+        msg = msg.replace("an antivirus program may have removed it: allow the folder", "check the folder")
     try:
         print(msg, flush=True)
     except UnicodeEncodeError:
@@ -88,8 +94,13 @@ def rmtree(p):
 
     for i in range(5):
         try:
-            if p.exists():
-                shutil.rmtree(p, onerror=writable)
+            if p.is_symlink():
+                p.unlink()
+            elif p.exists():
+                if sys.version_info >= (3, 12):
+                    shutil.rmtree(p, onexc=writable)
+                else:
+                    shutil.rmtree(p, onerror=writable)
             return
         except OSError:
             time.sleep(1 + i)
@@ -98,6 +109,12 @@ def rmtree(p):
 
 
 def pid_alive(pid):
+    if not WINDOWS:
+        try:
+            os.kill(int(pid), 0)
+            return True
+        except OSError:
+            return False
     import ctypes
     h = ctypes.windll.kernel32.OpenProcess(0x1000, False, int(pid))
     if not h:
@@ -110,6 +127,14 @@ def pid_alive(pid):
 
 def ram_gb():
     """available physical memory (GB), None if unknown"""
+    if not WINDOWS:
+        try:
+            for line in open("/proc/meminfo"):
+                if line.startswith("MemAvailable:"):
+                    return int(line.split()[1]) / 2 ** 20
+        except (OSError, ValueError):
+            pass
+        return None
     try:
         import ctypes
 
@@ -250,12 +275,13 @@ def ensure_tool(name):
             with zipfile.ZipFile(arc) as z:
                 members = [m for m in z.namelist() if not t.get("only") or any(m.endswith(o) for o in t["only"])]
                 z.extractall(tmp, members)
-        elif kind == "tar.gz":
-            with tarfile.open(arc, "r:gz") as z:
+        elif kind in ("tar.gz", "tar.xz"):
+            with tarfile.open(arc, "r:gz" if kind == "tar.gz" else "r:xz") as z:
+                members = [m for m in z.getmembers() if not t.get("only") or any(m.name.startswith(o) for o in t["only"])]
                 if hasattr(tarfile, "data_filter"):
-                    z.extractall(tmp, filter="data")
+                    z.extractall(tmp, members, filter="data")
                 else:
-                    z.extractall(tmp)
+                    z.extractall(tmp, members)
         elif kind == "7z-sfx":
             # the official self-extracting 7-Zip archive: -o<dir> -y extracts without asking
             r = subprocess.run([str(arc), "-o" + str(tmp), "-y"], capture_output=True, text=True, errors="replace",
@@ -281,14 +307,16 @@ def ensure_tool(name):
     return home / t.get("root", "")
 
 
-def check_compiler(w64):
+def check_compiler(cc):
+    """cc: w64devkit's folder (Windows) or zig's (Linux)"""
+    exe = [str(cc / "bin" / "gcc.exe"), "--version"] if WINDOWS else [str(cc / "zig"), "version"]
     try:
-        r = subprocess.run([str(w64 / "bin" / "gcc.exe"), "--version"], capture_output=True, text=True, timeout=120)
+        r = subprocess.run(exe, capture_output=True, text=True, timeout=120)
         ok = r.returncode == 0
     except (OSError, subprocess.TimeoutExpired):
         ok = False
     if not ok:
-        (TC / "w64devkit" / ".installed").unlink(missing_ok=True)  # unpacked again next run
+        (TC / ("w64devkit" if WINDOWS else "zig") / ".installed").unlink(missing_ok=True)  # unpacked again next run
         raise Fail("the compiler does not run. An antivirus program may be blocking it: allow the folder %s and "
                    "run install.bat again." % TC)
 
@@ -659,7 +687,7 @@ def build(game, cues, rebuild, w64, sdl):
     # what the recompiler's output depends on (an update of this repository may change it) and what the objects
     # depend on besides the sources (the compiler)
     recomp_id = tree_hash(list((SRC / "tools" / "recomp").glob("*.py")) + [SRC / "config" / (game + ".json")])
-    tools_id = TOOLS["w64devkit"]["sha256"] + TOOLS["sdl2"]["sha256"]
+    tools_id = "".join(t["sha256"] for n, t in sorted(TOOLS.items()) if n != "ffmpeg")
     rstamp, tstamp = gen / ".recomp_id", bld / ".toolchain_id"
     if not rebuild and bld.exists() and (not tstamp.exists() or tstamp.read_text() != tools_id):
         rebuild_objs = True
@@ -683,10 +711,22 @@ def build(game, cues, rebuild, w64, sdl):
     if free_gb() < 1.0:
         raise Fail("not enough free disk space to build (%.1f GB free, 1 GB needed)" % free_gb())
     env = dict(os.environ)
-    env["PATH"] = str(w64 / "bin") + os.pathsep + env.get("PATH", "")
-    env["FE_GCC"] = str(w64 / "bin" / "gcc.exe")
-    env["FE_WINDRES"] = str(w64 / "bin" / "windres.exe")
-    env["FE_SDL2"] = str(sdl / TOOLS["sdl2"]["prefix"])
+    if WINDOWS:
+        env["PATH"] = str(w64 / "bin") + os.pathsep + env.get("PATH", "")
+        env["FE_GCC"] = str(w64 / "bin" / "gcc.exe")
+        env["FE_WINDRES"] = str(w64 / "bin" / "windres.exe")
+        env["FE_SDL2"] = str(sdl / TOOLS["sdl2"]["prefix"])
+    else:  # zig as the C compiler, SDL2's headers (as SDL2/SDL.h), the system's SDL2 and OpenGL libraries
+        inc = TC / "sdlinc"
+        inc.mkdir(exist_ok=True)
+        link = inc / "SDL2"
+        if not link.exists():
+            os.symlink(sdl, link, target_is_directory=True)
+        env["FE_GCC"] = "%s cc" % (w64 / "zig")
+        env["FE_SDL2_INC"] = str(inc)
+        env["FE_LIBS"] = " ".join(system_libs())
+        env["ZIG_GLOBAL_CACHE_DIR"] = str(TC / "zig-cache")  # zig's cache stays in the folder
+        env["ZIG_LOCAL_CACHE_DIR"] = str(TC / "zig-cache")
     # parallel compiler processes: one per core, at most one per ~1 GB of free memory (a big generated file at -O2)
     ram = ram_gb()
     jobs = max(1, min(os.cpu_count() or 1, int(ram) if ram else 4))
@@ -721,7 +761,7 @@ def build(game, cues, rebuild, w64, sdl):
                     "compiler (allow the folder %s)." % ROOT)
         raise Fail("building %s failed. %s\n  The last lines of the build (all of it is in install.log):\n      %s"
                    % (g["title"], hint, "\n      ".join(tail[-12:])))
-    exe = bld / (game + "port.exe")
+    exe = bld / (game + "port" + EXE)
     if not exe.exists():
         raise Fail("building %s: %s is missing (an antivirus program may have removed it: allow the folder %s)"
                    % (g["title"], rel(exe), ROOT))
@@ -737,13 +777,17 @@ def install_game(game, bld, ffmpeg):
     home = ROOT / g["folder"]
     try:
         home.mkdir(exist_ok=True)
-        for f in (game + "port.exe", "SDL2.dll"):
+        for f in (game + "port" + EXE,) + (("SDL2.dll",) if WINDOWS else ()):
+            if (home / f).exists() and not WINDOWS:
+                (home / f).unlink()  # a running game keeps the old file; the new one goes in beside it
             shutil.copy2(bld / f, home / f)
         (home / "memcards").mkdir(exist_ok=True)
         (home / "states").mkdir(exist_ok=True)
         shutil.copy2(SRC / "SETTINGS.md", home / "SETTINGS.txt")
-        # shared by both games: the movie decoder and the fonts (the game looks for both in the data folder)
-        if not (DATA / "ffmpeg.exe").exists() or (DATA / "ffmpeg.exe").stat().st_size != ffmpeg.stat().st_size:
+        # shared by both games: the movie decoder (Linux: the system's, found on PATH) and the fonts (the game looks
+        # for both in the data folder)
+        if WINDOWS and (not (DATA / "ffmpeg.exe").exists()
+                        or (DATA / "ffmpeg.exe").stat().st_size != ffmpeg.stat().st_size):
             shutil.copy2(ffmpeg, DATA / "ffmpeg.exe")
         (DATA / "fonts").mkdir(exist_ok=True)
         for f in (SRC / "fonts").iterdir():
@@ -752,16 +796,17 @@ def install_game(game, bld, ffmpeg):
     except PermissionError:
         raise Fail("cannot replace the files in %s\\: %s is probably running. Close the game and run install.bat "
                    "again." % (g["folder"], g["title"]))
-    return home / (game + "port.exe")
+    return home / (game + "port" + EXE)
 
 
 def test_start(game, exe, cue1):
-    """a short start without a window: boots the game for ~20 s of game time"""
+    """a short start without a window: boots the game for ~20 s of game time (Linux: the software renderer, so it
+    also works without a display, e.g. over SSH)"""
     logf = TC / ("test_%s.log" % game)
     try:
         r = subprocess.run([str(exe), str(cue1), "--headless", "--fast", "--frames", "1200", "--mute",
-                            "--log", str(logf)], cwd=str(exe.parent), capture_output=True, text=True, timeout=300,
-                           errors="replace")
+                            "--log", str(logf)] + ([] if WINDOWS else ["--renderer", "sw"]), cwd=str(exe.parent),
+                           capture_output=True, text=True, timeout=300, errors="replace")
     except subprocess.TimeoutExpired:
         return "the test start did not finish in 5 minutes"
     except OSError as e:
@@ -778,8 +823,13 @@ def test_start(game, exe, cue1):
 
 
 def shortcuts(game, exe, cue1):
-    """Desktop + Start menu shortcuts; a failure here is a note (the game is installed and runs without them)"""
+    """Desktop + Start menu shortcuts; a failure here is a note (the game is installed and runs without them).
+    Linux: desktop launchers (linux_launch.py), which Steam's "Add a Non-Steam Game" dialog lists."""
     g = GAMES[game]
+    if not WINDOWS:
+        import linux_launch
+        linux_launch.launchers(g, exe, cue1, DATA / game / "icons" / (game + ".ico"), say)
+        return
     ps = r"""
 $ErrorActionPreference = 'Stop'
 $s = New-Object -ComObject WScript.Shell
@@ -829,12 +879,14 @@ def take_lock():
 
 def main():
     global _log
-    ap = argparse.ArgumentParser(prog="install.bat")
+    ap = argparse.ArgumentParser(prog="install.bat" if WINDOWS else "install.sh")
     ap.add_argument("--game", choices=sorted(GAMES))
     ap.add_argument("--verify", action="store_true")
     ap.add_argument("--rebuild", action="store_true")
     ap.add_argument("--no-shortcuts", action="store_true")
     ap.add_argument("--no-test", action="store_true")
+    ap.add_argument("--no-steam", action="store_true", help="Linux: do not add the games to the Steam library")
+    ap.add_argument("--yes", action="store_true", help="Linux: close Steam without asking when it must be closed")
     args = ap.parse_args()
     try:
         _log = open(LOG, "a", encoding="utf-8")
@@ -847,12 +899,13 @@ def main():
     try:
         str(ROOT).encode("ascii")
     except UnicodeEncodeError:
-        raise Fail("the folder's path has letters outside A-Z, which the compiler and the game cannot open. Move the "
-                   "whole folder to a plain path such as C:\\Games\\FearEffect and run install.bat again.")
-    if len(str(ROOT)) > 150:
+        if WINDOWS:  # the game opens files through the ANSI calls; Linux paths are UTF-8 throughout
+            raise Fail("the folder's path has letters outside A-Z, which the compiler and the game cannot open. Move "
+                       "the whole folder to a plain path such as C:\\Games\\FearEffect and run install.bat again.")
+    if WINDOWS and len(str(ROOT)) > 150:
         raise Fail("the folder's path is too long (%d characters): move the folder closer to the drive's root, "
                    "e.g. C:\\Games\\FearEffect" % len(str(ROOT)))
-    if "onedrive" in str(ROOT).lower():
+    if WINDOWS and "onedrive" in str(ROOT).lower():
         say("  note: this folder is inside OneDrive. If OneDrive keeps files online-only, the game stutters or "
             "cannot read them: choose 'Always keep on this device' for the folder, or move it out of OneDrive.")
     lock = take_lock()
@@ -910,12 +963,18 @@ def run(args):
         raise Fail("no game has both its discs and its asset pack (see above).")
 
     step("3/5 Build tools (.toolchain\\, downloaded once)")
-    if not all((TC / n / ".installed").exists() for n in ("w64devkit", "sdl2", "ffmpeg")) and free_gb() < NEED_FREE_GB:
+    if not all((TC / n / ".installed").exists() for n in TOOLS) and free_gb() < NEED_FREE_GB:
         raise Fail("not enough free disk space: %.1f GB free on this drive, %.0f GB needed for the build tools and "
                    "the build." % (free_gb(), NEED_FREE_GB))
-    w64 = ensure_tool("w64devkit")
-    sdl = ensure_tool("sdl2")
-    ff = ensure_tool("ffmpeg") / TOOLS["ffmpeg"]["check"]
+    if WINDOWS:
+        w64 = ensure_tool("w64devkit")
+        sdl = ensure_tool("sdl2")
+        ff = ensure_tool("ffmpeg") / TOOLS["ffmpeg"]["check"]
+    else:  # the system provides SDL2, OpenGL and ffmpeg; checked before anything is downloaded
+        system_libs()
+        ff = system_ffmpeg()
+        w64 = ensure_tool("zig")
+        sdl = ensure_tool("sdl2_headers")
     check_compiler(w64)
     say("  compiler, SDL2 and ffmpeg ready")
 
@@ -941,13 +1000,72 @@ def run(args):
             say("  skipped (--no-shortcuts). Start the game with:", '"%s" "%s"' % (exe, cue1))
         else:
             shortcuts(game, exe, cue1)
+    if not WINDOWS and installed and not args.no_shortcuts and not args.no_steam:
+        steam_library(installed, args)
     if failed:
         raise Fail("%s does not start (see above). Please report it with install.log." %
                    ", ".join(GAMES[g]["title"] for g in failed))
     say("")
-    say("Done: %s. Start the game from its shortcut on the Desktop or in the Start menu." %
-        ", ".join(GAMES[g]["title"] for g in installed))
+    if WINDOWS:
+        say("Done: %s. Start the game from its shortcut on the Desktop or in the Start menu." %
+            ", ".join(GAMES[g]["title"] for g in installed))
+    else:
+        say("Done: %s. Start it from your Steam library (Game Mode: Library > Non-Steam), the app menu or the "
+            "desktop launcher." % ", ".join(GAMES[g]["title"] for g in installed))
     return 0
+
+
+def steam_library(installed, args):
+    """Linux: the games in the Steam library with SteamGridDB artwork (linux_steam.py: backups, read-back check,
+    automatic rollback)"""
+    import linux_steam
+    art = json.loads((HERE / "steam_art.json").read_text(encoding="utf-8")) if (HERE / "steam_art.json").exists() else {}
+
+    def fetch_art(entry):
+        return download("artwork", entry)
+
+    games = []
+    for g, (exe, cue1) in installed.items():
+        icon = exe.parent / "icon.png"
+        games.append((GAMES[g], exe, cue1, icon if icon.exists() else None, art.get(g, {})))
+    linux_steam.steam_add(games, say, fetch_art, assume_yes=args.yes)
+
+
+# ---------------------------------------------------------------------------------------------- Linux system parts
+def system_libs():
+    """the system's SDL2 and OpenGL libraries (SteamOS has both), linked by path"""
+    found = []
+    for name in ("libSDL2-2.0.so.0", "libGL.so.1"):
+        path = None
+        try:
+            out = subprocess.run(["ldconfig", "-p"], capture_output=True, text=True).stdout
+            m = re.search(r"\s%s \(.*x86-64.*\) => (\S+)" % re.escape(name), out)
+            path = m.group(1) if m else None
+        except OSError:
+            pass
+        for d in ("/usr/lib", "/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu"):
+            if not path and os.path.exists(os.path.join(d, name)):
+                path = os.path.join(d, name)
+        if not path:
+            raise Fail("%s is missing on this system. SteamOS has it; on other Linux systems install the package "
+                       "that provides it (SDL2 / OpenGL) and run install.sh again." % name)
+        found.append(path)
+    return found
+
+
+def system_ffmpeg():
+    ff = shutil.which("ffmpeg")
+    ok = False
+    if ff:
+        try:
+            ok = " h264 " in subprocess.run([ff, "-hide_banner", "-decoders"], capture_output=True, text=True,
+                                            timeout=60).stdout
+        except (OSError, subprocess.TimeoutExpired):
+            ok = False
+    if not ok:
+        raise Fail("ffmpeg (with its H.264 decoder) is missing. SteamOS has it; on other Linux systems install the "
+                   "ffmpeg package and run install.sh again.")
+    return Path(ff)
 
 
 if __name__ == "__main__":

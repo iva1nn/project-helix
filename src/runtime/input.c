@@ -41,9 +41,43 @@ static const char *const default_pad[B_COUNT] = {
     "leftstick", "back, touchpad", "rightstick", "",
     "", "", "", ""};
 
+/* Steam Deck (input_is_steam_deck): no keyboard in Game Mode, the Steam and ... buttons belong to Steam and the
+ * trackpads are no "touchpad" button, so the save states go on View combos (View held + a shoulder / trigger) and View
+ * alone is the remaster switch; a new settings file also gets the user's PC picture values at 4x (14 Nov 2026). */
+static const char *const deck_pad[B_COUNT] = {
+    "", "", "", "start", "dpup", "dpright", "dpdown", "dpleft",
+    "lefttrigger", "righttrigger", "leftshoulder", "rightshoulder",
+    "y", "b", "a", "x",
+    "", "", "", "", "", "", "", "", "guide",
+    "leftstick", "back", "rightstick", "",
+    "back+rightshoulder", "back+leftshoulder", "back+righttrigger", "back+lefttrigger"};
+
+int input_is_steam_deck(void) {
+#ifdef _WIN32
+    return 0;
+#else
+    static int deck = -1;
+    if (deck < 0) {
+        const char *e = getenv("SteamDeck");
+        deck = e && !strcmp(e, "1");
+        char v[64] = {0}, p[64] = {0};
+        FILE *f = fopen("/sys/class/dmi/id/board_vendor", "r");
+        if (f) { if (!fgets(v, sizeof v, f)) v[0] = 0; fclose(f); }
+        f = fopen("/sys/class/dmi/id/board_name", "r");
+        if (f) { if (!fgets(p, sizeof p, f)) p[0] = 0; fclose(f); }
+        if (!strncmp(v, "Valve", 5) && (!strncmp(p, "Jupiter", 7) || !strncmp(p, "Galileo", 7))) deck = 1;
+        if (deck) LOG("input: Steam Deck: its defaults for a new settings file\n");
+    }
+    return deck;
+#endif
+}
+
+static const char *pad_default(int b) { return input_is_steam_deck() ? deck_pad[b] : default_pad[b]; }
+
 static SDL_Scancode keys[B_COUNT][INPUT_MAXB];
 static int nkeys[B_COUNT];
-typedef struct { int is_axis; int id; } PadBind;
+/* mod >= 0: a combo, the button mod held while id is pressed ("back+rightshoulder") */
+typedef struct { int is_axis; int id; int mod; } PadBind;
 static PadBind pbind[B_COUNT][INPUT_MAXB];
 static int npbind[B_COUNT];
 static int deadzone = 8000; /* stick deadzone (0..32767) */
@@ -81,11 +115,19 @@ static void set_pad(int b, const char *list) {
     for (char *t = strtok(buf, ","); t && npbind[b] < INPUT_MAXB; t = strtok(0, ",")) {
         t = trim(t);
         if (!*t) continue;
+        int mod = -1;
+        char *plus = strchr(t, '+');
+        if (plus) { /* a combo: the first button held, the second pressed */
+            *plus = 0;
+            mod = SDL_GameControllerGetButtonFromString(trim(t));
+            t = trim(plus + 1);
+            if (mod == SDL_CONTROLLER_BUTTON_INVALID) { LOG("input: unknown combo button for %s\n", bind_names[b]); continue; }
+        }
         SDL_GameControllerButton btn = SDL_GameControllerGetButtonFromString(t);
-        if (btn != SDL_CONTROLLER_BUTTON_INVALID) { pbind[b][npbind[b]++] = (PadBind){0, btn}; continue; }
+        if (btn != SDL_CONTROLLER_BUTTON_INVALID) { pbind[b][npbind[b]++] = (PadBind){0, btn, mod}; continue; }
         SDL_GameControllerAxis ax = SDL_GameControllerGetAxisFromString(t);
         if (ax == SDL_CONTROLLER_AXIS_TRIGGERLEFT || ax == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) {
-            pbind[b][npbind[b]++] = (PadBind){1, ax};
+            pbind[b][npbind[b]++] = (PadBind){1, ax, mod};
             continue;
         }
         LOG("input: unknown controller button \"%s\" for %s\n", t, bind_names[b]);
@@ -103,7 +145,8 @@ static void pad_text(int b, char *out, size_t n) {
     for (int i = 0; i < npbind[b]; i++) {
         const char *s = pbind[b][i].is_axis ? SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)pbind[b][i].id)
                                             : SDL_GameControllerGetStringForButton((SDL_GameControllerButton)pbind[b][i].id);
-        snprintf(out + strlen(out), n - strlen(out), "%s%s", i ? ", " : "", s ? s : "?");
+        const char *m = pbind[b][i].mod >= 0 ? SDL_GameControllerGetStringForButton((SDL_GameControllerButton)pbind[b][i].mod) : 0;
+        snprintf(out + strlen(out), n - strlen(out), "%s%s%s%s", i ? ", " : "", m ? m : "", m ? "+" : "", s ? s : "?");
     }
 }
 
@@ -113,6 +156,8 @@ static void write_bindings(FILE *f) {
                "; Keyboard names: SDL key names (e.g. Return, Space, Left Shift, Keypad 8, F9).\n"
                "; Controller names: a b x y back guide start leftstick rightstick leftshoulder rightshoulder\n"
                ";   dpup dpdown dpleft dpright misc1 touchpad paddle1-4, and lefttrigger / righttrigger.\n"
+               "; A combo: two names joined by + (back+rightshoulder = hold View / Select, press R1); the first\n"
+               ";   button's own action then fires on its release, and only if no combo was used meanwhile.\n"
                "; Positions are by layout (Xbox naming): a = bottom button (Cross on a PlayStation pad).\n"
                "; Both sticks of the controller are always the DualShock sticks; 'analog' toggles the\n"
                "; analog mode like the ANALOG button of a DualShock (the game may also switch it).\n"
@@ -137,6 +182,7 @@ static void write_bindings(FILE *f) {
 void write_default_ini(const char *path) {
     FILE *f = fopen(path, "w");
     if (!f) return;
+    int deck = input_is_steam_deck();
     fprintf(f, "; Fear Effect native port: settings. Command-line options override them.\n\n[game]\n"
                "; the game's Disc 1 image (.cue); Discs 2-4 are found next to it (same name with (Disc N),\n"
                "; or in sibling folders disc2..disc4). Used when the exe is started without a disc argument.\n"
@@ -148,7 +194,7 @@ void write_default_ini(const char *path) {
                "; (a remaster work folder here is for development)\n"
                "remaster = \n"
                "; internal resolution 1-8, renderer hw (OpenGL) or sw\n"
-               "scale = 8\nrenderer = hw\n"
+               "scale = %d\nrenderer = hw\n"
                "; loading speed: data read this many times faster than the CD drive (movies and voices keep its\n"
                "; rate); 1 = the original loading times\n"
                "cd_speed = 8\n"
@@ -158,11 +204,11 @@ void write_default_ini(const char *path) {
                "; bloom (glow of the brightest lights), vignette (darker corners), film grain; 1 = on, 0 = off.\n"
                "; More options: bloom_threshold 0.7, bloom_radius 1.0, bloom_halo 0.5, vignette_start 0.45,\n"
                "; vignette_softness 0.55, grain_rows 640, grain_refresh 24\n"
-               "bloom = 1\nbloom_intensity = 0.80\nvignette = 1\nvignette_strength = 0.30\n"
-               "grain = 1\ngrain_strength = 1.00\n"
+               "bloom = 1\nbloom_intensity = %s\nvignette = 1\nvignette_strength = %s\n"
+               "grain = 1\ngrain_strength = %s\n"
                "; room loops: the end of a room's loop dissolves into its start over this many movie frames\n"
                "; (15 per second); 0 = a hard cut\n"
-               "loop_fade = 8\n"
+               "loop_fade = %d\n"
                "; display = fullscreen (borderless) or windowed;\n"
                "; fill = screen layout in rooms: 1 enlarged picture with the HUD in bands, 2 HUD over the\n"
                "; picture, 0 the original 4:3 frame\n"
@@ -173,8 +219,9 @@ void write_default_ini(const char *path) {
                "directional = 1\n"
                "; the texture packs (redrawn interface, F6): the folder holding the SLUS-xxxxx folders,\n"
                "; empty = the data folder's, off = none\n"
-               "textures = \n\n");
-    for (int b = 0; b < B_COUNT; b++) { set_keys(b, default_keys[b]); set_pad(b, default_pad[b]); }
+               "textures = \n\n",
+            deck ? 4 : 8, deck ? "0.50" : "0.80", deck ? "0.50" : "0.30", deck ? "0.50" : "1.00", deck ? 4 : 8);
+    for (int b = 0; b < B_COUNT; b++) { set_keys(b, default_keys[b]); set_pad(b, pad_default(b)); }
     write_bindings(f);
     fclose(f);
 }
@@ -263,7 +310,7 @@ void settings_set(const char *key, const char *value) {
 }
 
 void input_init(void) {
-    for (int b = 0; b < B_COUNT; b++) { set_keys(b, default_keys[b]); set_pad(b, default_pad[b]); }
+    for (int b = 0; b < B_COUNT; b++) { set_keys(b, default_keys[b]); set_pad(b, pad_default(b)); }
     char *base = SDL_GetBasePath();
     snprintf(ini_path, sizeof ini_path, "%s" FE_GAME "port.ini", base ? base : "");
     if (base) SDL_free(base);
@@ -293,7 +340,7 @@ void input_init(void) {
     fclose(f);
     if (!seen_actions) {
         /* a settings file from before the actions: Select, L3 and R3 move to the actions, as in a new file */
-        set_pad(B_SELECT, default_pad[B_SELECT]); set_pad(B_L3, default_pad[B_L3]); set_pad(B_R3, default_pad[B_R3]);
+        set_pad(B_SELECT, pad_default(B_SELECT)); set_pad(B_L3, pad_default(B_L3)); set_pad(B_R3, pad_default(B_R3));
         input_save();
     }
     LOG("input: bindings from %s\n", ini_path);
@@ -320,17 +367,17 @@ void input_bind_key(int b, SDL_Scancode sc) {
 void input_bind_pad(int b, int is_axis, int id) {
     for (int o = 0; o < B_COUNT; o++)
         for (int i = 0; i < npbind[o]; i++)
-            if (pbind[o][i].is_axis == is_axis && pbind[o][i].id == id) {
+            if (pbind[o][i].is_axis == is_axis && pbind[o][i].id == id && pbind[o][i].mod < 0) {
                 memmove(&pbind[o][i], &pbind[o][i + 1], sizeof(PadBind) * (size_t)(npbind[o] - i - 1));
                 npbind[o]--; i--;
             }
-    pbind[b][0] = (PadBind){is_axis, id};
+    pbind[b][0] = (PadBind){is_axis, id, -1};
     npbind[b] = 1;
 }
 
 void input_bind_defaults(int pad) {
     for (int b = 0; b < B_COUNT; b++) {
-        if (pad) set_pad(b, default_pad[b]);
+        if (pad) set_pad(b, pad_default(b));
         else set_keys(b, default_keys[b]);
     }
 }
@@ -370,15 +417,29 @@ static uint8_t axis_to_u8(int v) {
 }
 
 static int pad_input_down(PadBind p) {
-    return p.is_axis ? SDL_GameControllerGetAxis(ctrl, (SDL_GameControllerAxis)p.id) > 12000
-                     : SDL_GameControllerGetButton(ctrl, (SDL_GameControllerButton)p.id);
+    int d = p.is_axis ? SDL_GameControllerGetAxis(ctrl, (SDL_GameControllerAxis)p.id) > 12000
+                      : SDL_GameControllerGetButton(ctrl, (SDL_GameControllerButton)p.id);
+    return d && (p.mod < 0 || SDL_GameControllerGetButton(ctrl, (SDL_GameControllerButton)p.mod));
 }
 
-/* a controller input bound to one of the port's actions does not also reach the game */
+/* a controller input bound to one of the port's actions does not also reach the game; a combo's second input only
+ * while the combo's first button is held (R1 stays the game's R1 without View) */
 static int used_by_action(PadBind p) {
     for (int b = B_ACT_FIRST; b < B_COUNT; b++)
+        for (int i = 0; i < npbind[b]; i++) {
+            PadBind q = pbind[b][i];
+            if (q.is_axis != p.is_axis || q.id != p.id) continue;
+            if (q.mod < 0 || SDL_GameControllerGetButton(ctrl, (SDL_GameControllerButton)q.mod)) return 1;
+        }
+    return 0;
+}
+
+/* buttons that start a combo: an action bound to one alone fires on its release, if no combo was used while it was
+ * held (View alone = remaster on / off, View + R1 = save state) */
+static int combo_first(int btn) {
+    for (int b = B_ACT_FIRST; b < B_COUNT; b++)
         for (int i = 0; i < npbind[b]; i++)
-            if (pbind[b][i].is_axis == p.is_axis && pbind[b][i].id == p.id) return 1;
+            if (pbind[b][i].mod == btn) return 1;
     return 0;
 }
 
@@ -387,12 +448,30 @@ void input_poll(void) {
     int on[B_COUNT] = {0};
     /* the port's actions on the keyboard: not with Shift / Ctrl / Alt held (Shift+F8, Alt+Enter are fixed keys) */
     int mods = (SDL_GetModState() & (KMOD_SHIFT | KMOD_CTRL | KMOD_ALT)) != 0;
+    /* combo first buttons: held / released this poll, and whether a combo was used during the hold */
+    static int held_prev[SDL_CONTROLLER_BUTTON_MAX], combo_used[SDL_CONTROLLER_BUTTON_MAX];
+    int clean_release[SDL_CONTROLLER_BUTTON_MAX] = {0};
+    if (ctrl)
+        for (int m = 0; m < SDL_CONTROLLER_BUTTON_MAX; m++) {
+            if (!combo_first(m)) { held_prev[m] = 0; continue; }
+            int held = SDL_GameControllerGetButton(ctrl, (SDL_GameControllerButton)m);
+            if (held && !held_prev[m]) combo_used[m] = 0;
+            for (int b = B_ACT_FIRST; b < B_COUNT; b++)
+                for (int i = 0; i < npbind[b]; i++)
+                    if (pbind[b][i].mod == m && pad_input_down(pbind[b][i])) combo_used[m] = 1;
+            clean_release[m] = !held && held_prev[m] && !combo_used[m];
+            held_prev[m] = held;
+        }
     for (int b = 0; b < B_COUNT; b++) {
         if (!(b >= B_ACT_FIRST && mods))
             for (int i = 0; i < nkeys[b]; i++) if (k[keys[b][i]]) on[b] = 1;
         if (ctrl)
-            for (int i = 0; i < npbind[b]; i++)
-                if (pad_input_down(pbind[b][i]) && (b >= B_ACT_FIRST || !used_by_action(pbind[b][i]))) on[b] = 1;
+            for (int i = 0; i < npbind[b]; i++) {
+                PadBind p = pbind[b][i];
+                int down = b >= B_ACT_FIRST && p.mod < 0 && !p.is_axis && combo_first(p.id) ? clean_release[p.id]
+                                                                                            : pad_input_down(p);
+                if (down && (b >= B_ACT_FIRST || !used_by_action(p))) on[b] = 1;
+            }
     }
     /* the port's actions: on the press */
     static int prev_act[B_COUNT];

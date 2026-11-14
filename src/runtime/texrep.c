@@ -14,7 +14,7 @@
  * (gpu_hw.c). Images are decoded on a worker thread the first time they are needed; until then the original
  * texture shows (a frame or two). */
 #include <stdlib.h>
-#include <io.h>
+#include "port.h"
 #include <SDL2/SDL.h>
 #include "hw.h"
 #define XXH_INLINE_ALL

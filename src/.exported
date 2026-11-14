@@ -7,6 +7,7 @@ data/README.txt
 discs/fe1/README.txt
 discs/fe2/README.txt
 install.bat
+install.sh
 src/SETTINGS.md
 src/VERSION.txt
 src/config/fe1.json
@@ -24,7 +25,10 @@ src/icons/fe1port.rc
 src/icons/fe2port.rc
 src/installer/games.json
 src/installer/install.py
+src/installer/linux_launch.py
+src/installer/linux_steam.py
 src/installer/packs.json
+src/installer/steam_art.json
 src/installer/toolchain.json
 src/runtime/agent.c
 src/runtime/bios.c
@@ -56,6 +60,7 @@ src/runtime/mlook.h
 src/runtime/models.c
 src/runtime/models.h
 src/runtime/movie.c
+src/runtime/port.h
 src/runtime/props.c
 src/runtime/props.h
 src/runtime/recomp.h
