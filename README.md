@@ -80,7 +80,8 @@ your own disc images, the asset pack(s), and internet once (about 65 MB of build
    Steam again and checks a minute later that Steam kept everything; if Steam ever drops an entry, it puts your list
    back as it was and asks you to add the games yourself (Steam → *Games → Add a Non-Steam Game to My Library*,
    tick *Fear Effect* and/or *Fear Effect 2 - Retro Helix*). `bash install.sh --no-steam` skips this step.
-5. **Play in Game Mode:** *Library → Non-Steam*. Quit with the Steam button → *Exit game*.
+5. **Play in Game Mode:** *Library → Non-Steam*. Quit from the in-game menu (hold View, press Menu) → *Quit to
+   desktop*, or with the Steam button → *Exit game*.
 
 **Controls on the Deck:**
 
@@ -90,6 +91,7 @@ your own disc images, the asset pack(s), and internet once (about 65 MB of build
 | View (⧉), tap | remaster on / off |
 | hold View + R1 / L1 | save / load state |
 | hold View + R2 / L2 | next / previous state slot |
+| hold View + Menu (☰) | in-game menu: pause, cheats, quit |
 | L3 / R3 | directional ↔ original tank controls / screen layout |
 
 Start the games from **Steam** (also in Desktop Mode): Steam then hands the controls to the game as a gamepad.
@@ -143,9 +145,15 @@ live there too.
 | F7 | L3 | Directional / original tank controls |
 | F11 or Alt+Enter | | Fullscreen / window |
 | F5 / F8 | | Save / load state (Page Up / Page Down picks the slot) |
+| Esc | Select + Start | In-game menu: pauses the game; cheats, Visuals, quit to desktop |
 
 Inside the game, *Options → Controls* opens the controls menu, where every key and button can be changed. Every
 other setting is described in `SETTINGS.txt` in each game folder.
+
+**Quitting and cheats.** The in-game menu (Esc, or Select + Start on a gamepad; View + Menu on a Steam Deck) pauses
+the game anywhere. From there you can switch on **infinite health** and **infinite ammo**, change the visuals, or
+**quit to desktop**. Quitting doesn't save: progress since your last save is lost. The cheats stay on until you
+switch them off, and the title screen's *Options* has them too, along with *Quit to desktop*.
 
 ## Updating
 

@@ -39,6 +39,8 @@ One file per exe, **next to the exe** (`SDL_GetBasePath`), named after the game:
 | `renderer` | `hw` / `sw` | `hw` | OpenGL renderer or the software rasteriser (no remaster, no effects). Falls back to `sw` if OpenGL fails. |
 | `cd_speed` | integer >= 1 | 8 | Data reads this many times faster than the CD drive (movies and XA voices keep the real rate). 1 = original loading times. |
 | `smooth` | 0 / 1 | 1 | 60 fps remodels (posed between the game's 30 fps frames). 0 = the game's 30 fps. |
+| `cheat_health` | 0 / 1 | 0 | Infinite health: the player's health is put back to full (127) after every hit, while the game runs the player (in-game menu or Options -> Cheats). Scripted instant deaths still happen. |
+| `cheat_ammo` | 0 / 1 | 0 | Infinite ammo: every owned gun's magazine is kept at the highest count seen while the cheat is on (an empty FE2 gun gets 99; FE2 never reloads by itself), so guns never run dry or reload; plus the game's own cheat flag for the spare ammo (FE1 `0x80077810`, FE2 `0x8007B4F8`, bit 0). |
 | `bloom` | 0 / 1 | 1 | Bloom (glow of the brightest lights). |
 | `bloom_intensity` | float | 0.80 | Bloom strength. |
 | `bloom_threshold` | float | 0.7 | Brightness above which bloom starts. Not in the default file. |
@@ -101,6 +103,7 @@ leftshoulder rightshoulder dpup dpdown dpleft dpright misc1 touchpad paddle1-4`,
 | `act_state_save` (save state into the current slot) | `F5` | (none) |
 | `act_state_load` (load the current slot's state) | `F8` | (none) |
 | `act_state_next` / `act_state_prev` (state slot 1-9) | `PageUp` / `PageDown` | (none) |
+| `act_menu` (in-game menu: the game pauses; back to the game, cheats, Visuals, quit to desktop) | `Escape` | `back+start` (Select + Start; View + Menu on the Deck) |
 
 The port's actions (`act_*`) do not fire from the keyboard while Shift, Ctrl or Alt is held (Shift+F8 and Alt+Enter
 are fixed keys). Inis written before 4 Nov have no `act_state_*` lines: the defaults above apply.
@@ -111,7 +114,7 @@ alone (`act_remaster = back`) then fires when that button is released, and only 
 
 **Steam Deck** (Linux, detected from the board name Valve Jupiter / Galileo or `SteamDeck=1`): a new settings file gets
 `act_remaster = back`, `act_state_save = back+rightshoulder`, `act_state_load = back+leftshoulder`,
-`act_state_next = back+righttrigger`, `act_state_prev = back+lefttrigger`, `act_fullscreen` empty, and in `[game]`
+`act_state_next = back+righttrigger`, `act_state_prev = back+lefttrigger`, `act_menu = back+start`, `act_fullscreen` empty, and in `[game]`
 `scale = 4`, `bloom_intensity = 0.50`, `vignette_strength = 0.50`, `grain_strength = 0.50`, `loop_fade = 4`. An existing
 file is kept as it is.
 
@@ -265,7 +268,10 @@ All optional; set them before the start (`$env:FE_PERF=2` in PowerShell). They l
 | `FE_RAM_END=FILE` | Where `--frames` writes the RAM (default `out/ram_end.bin`). |
 | `FE_DUMP_SW=1` | With frame dumps, also the software renderer's picture (`sw_NNNNNN.png`). |
 | `FE_MENU_TEST=1` | Let the options menu open in headless runs (`--renderer hw`; without it headless runs keep the game's own options screens). |
-| `FE_MENU_KEYS=frame:scancode,...` | Type keys into the menu in headless runs (81 Down, 82 Up, 79 Right, 80 Left, 40 Enter, 41 Esc). |
+| `FE_MENU_KEYS=frame:scancode,...` | Type keys into the menu in headless runs (81 Down, 82 Up, 79 Right, 80 Left, 40 Enter, 41 Esc), in order, one per vblank from its frame on (while the in-game menu holds the game, the frame stands still and the keys go on). Esc with the menu closed opens the in-game menu. |
+| `FE_MENU_SHOTS=N` | Headless in-game menu tests: a screen picture (`menu_FRAME_STEP.png` in `--dump-dir`, `--dump-screen` size) after each of the first N menu steps. |
+| `FE_DBG_CHEATS=1` | The player's health each time it changes, when the ammo cheat sets the game's flag, and each magazine it puts back. |
+| `FE_DBG_MENU=1` | Every controller button and stick push, and every key, that reaches the menu code, with the menu's page and cursor. |
 | `FE_DBG_OPTIONS=1` | Options menu: each change of the game's shell state (FE2 node / target / cursor, FE1 module / cursor), each game option written, each sound apply. |
 | `FE_STATE_HASH=FRAME` | Save states: log per vblank from FRAME the hashes of RAM and VRAM and the cycle count (`hash N ram ... vram ... cyc ...`), for determinism checks. |
 | `FE_STATE_LOAD_AT=FRAME:FILE` | Load a state at that vblank of the running game, as the load key does (tests of the in-game load). |

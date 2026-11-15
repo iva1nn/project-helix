@@ -22,7 +22,7 @@ static const char *const bind_names[B_COUNT] = {
     "lstick_up", "lstick_down", "lstick_left", "lstick_right",
     "rstick_up", "rstick_down", "rstick_left", "rstick_right", "analog",
     "act_controls", "act_remaster", "act_overlay", "act_fullscreen",
-    "act_state_save", "act_state_load", "act_state_next", "act_state_prev"};
+    "act_state_save", "act_state_load", "act_state_next", "act_state_prev", "act_menu"};
 
 static const char *const default_keys[B_COUNT] = {
     "Backspace", "Z", "C", "Return", "Up", "Right", "Down", "Left", "1", "3", "Q", "E",
@@ -30,7 +30,7 @@ static const char *const default_keys[B_COUNT] = {
     "I", "K", "J", "L",
     "Keypad 8", "Keypad 2", "Keypad 4", "Keypad 6", "F9",
     "F7", "F12", "F10", "F11",
-    "F5", "F8", "PageUp", "PageDown"};
+    "F5", "F8", "PageUp", "PageDown", "Escape"};
 /* controller: SDL button names, or lefttrigger/righttrigger; sticks use the analog axes. Select, L3 and R3
  * do nothing in either game (tools/button_test.py), so they carry the port's actions. */
 static const char *const default_pad[B_COUNT] = {
@@ -39,7 +39,7 @@ static const char *const default_pad[B_COUNT] = {
     "y", "b", "a", "x",
     "", "", "", "", "", "", "", "", "guide",
     "leftstick", "back, touchpad", "rightstick", "",
-    "", "", "", ""};
+    "", "", "", "", "back+start"};
 
 /* Steam Deck (input_is_steam_deck): no keyboard in Game Mode, the Steam and ... buttons belong to Steam and the
  * trackpads are no "touchpad" button, so the save states go on View combos (View held + a shoulder / trigger) and View
@@ -50,7 +50,7 @@ static const char *const deck_pad[B_COUNT] = {
     "y", "b", "a", "x",
     "", "", "", "", "", "", "", "", "guide",
     "leftstick", "back", "rightstick", "",
-    "back+rightshoulder", "back+leftshoulder", "back+righttrigger", "back+lefttrigger"};
+    "back+rightshoulder", "back+leftshoulder", "back+righttrigger", "back+lefttrigger", "back+start"};
 
 int input_is_steam_deck(void) {
 #ifdef _WIN32

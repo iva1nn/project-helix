@@ -11,7 +11,11 @@
  * originals did; the port's are saved to the settings file. Back on the first page returns to the game's main menu.
  * Should the game ever show one of its options screens (a press the menu did not see), the screen is covered, the
  * game is walked back to its main menu and the menu opens.
- * While the menu is open the game gets no input; the pad state recorded for replays is what the game got. */
+ * While the menu is open the game gets no input; the pad state recorded for replays is what the game got.
+ * The in-game menu (act_menu: Esc, Select+Start / View+Menu) opens the same screen anywhere with the game paused (main.c
+ * holds the game in its vblank while menu_paused()): back to the game, the cheats, Visuals, quit to desktop. The cheats
+ * (infinite health: the player's actor +0x68 kept at 127, full in both games; infinite ammo: the game's own cheat flag,
+ * FE1 0x80077810 / FE2 0x8007B4F8 bit 0) are written at every vblank (menu_cheats_vblank) and kept in the settings. */
 #include <stdlib.h>
 #include <SDL2/SDL.h> /* before hw.h: recomp.h's register names clash with Windows headers */
 #include "hw.h"
@@ -36,7 +40,10 @@ enum { EX_NONE, EX_ENTER, EX_SHOW, EX_RETURN, EX_SETTLE };
 static int ex, ex_t, ex_tick, ex_reopen, ex_wait;
 static uint16_t ex_btn;
 
-enum { P_ROOT, P_SOUND, P_CONTROLS, P_GAME, P_VISUALS, P_KEYS, P_PAD, P_LAYOUT };
+enum { P_ROOT, P_SOUND, P_CONTROLS, P_GAME, P_VISUALS, P_KEYS, P_PAD, P_LAYOUT, P_PAUSE, P_CHEATS, P_QUIT };
+static int home = P_ROOT;  /* the first page: P_ROOT from the game's main menu, P_PAUSE in game (act_menu) */
+static int paused;         /* opened by act_menu: the game stands still until it closes */
+int cheat_health, cheat_ammo; /* settings [game] cheat_health / cheat_ammo */
 
 static int game_fe1(void) { return gopt_fe1; }
 
@@ -72,7 +79,8 @@ static const char *const button_label[B_COUNT] = {
     [B_ACT_CONTROLS] = "Remaster: directional / tank controls", [B_ACT_REMASTER] = "Remaster: on / off",
     [B_ACT_OVERLAY] = "Remaster: screen layout", [B_ACT_FULLSCREEN] = "Fullscreen / window",
     [B_ACT_STATE_SAVE] = "Save state (current slot)", [B_ACT_STATE_LOAD] = "Load state (current slot)",
-    [B_ACT_STATE_NEXT] = "Save state slot: next", [B_ACT_STATE_PREV] = "Save state slot: previous"};
+    [B_ACT_STATE_NEXT] = "Save state slot: next", [B_ACT_STATE_PREV] = "Save state slot: previous",
+    [B_ACT_MENU] = "In-game menu: cheats, quit"};
 
 /* the binding rows of a page, in menu order; -1 = reset to defaults, -2 = back */
 static int bind_rows(int pad, int *out) {
@@ -80,7 +88,7 @@ static int bind_rows(int pad, int *out) {
                                 B_L1, B_L2, B_START, B_SELECT, B_L3, B_R3, B_LS_UP, B_LS_DOWN, B_LS_LEFT, B_LS_RIGHT,
                                 B_RS_UP, B_RS_DOWN, B_RS_LEFT, B_RS_RIGHT, B_ANALOG, B_ACT_CONTROLS, B_ACT_REMASTER,
                                 B_ACT_OVERLAY, B_ACT_FULLSCREEN, B_ACT_STATE_SAVE, B_ACT_STATE_LOAD, B_ACT_STATE_NEXT,
-                                B_ACT_STATE_PREV};
+                                B_ACT_STATE_PREV, B_ACT_MENU};
     int n = 0;
     for (size_t i = 0; i < sizeof order / sizeof *order; i++) {
         int b = order[i];
@@ -129,6 +137,7 @@ enum {
     X_KEYS, X_PAD, X_DIRECTIONAL, X_CTLTYPE, X_VIBRATION, X_LAYOUT, X_PRESET,
     X_DIFFICULTY, X_SUBTITLES, X_AUTODRAW, X_BEACON, X_EXTRA,
     X_REMASTER, X_FILL, X_SMOOTH, X_DISPLAY, X_BLOOM, X_BLOOM_I, X_VIG, X_VIG_S, X_GRAIN, X_GRAIN_S,
+    X_RESUME, X_CHEATS, X_CHEAT_HEALTH, X_CHEAT_AMMO, X_QUIT, X_QUIT_NO, X_QUIT_YES,
     X_MAP0, X_MAP_RESET = X_MAP0 + 8,
     X_BACK
 };
@@ -136,7 +145,15 @@ enum {
 static int page_rows(int p, int *r) {
     int n = 0, fe2 = !game_fe1();
     switch (p) {
-    case P_ROOT: r[n++] = X_SOUND; r[n++] = X_CONTROLS; r[n++] = X_GAME; r[n++] = X_VISUALS; r[n++] = X_CLOSE; break;
+    case P_ROOT:
+        r[n++] = X_SOUND; r[n++] = X_CONTROLS; r[n++] = X_GAME; r[n++] = X_VISUALS; r[n++] = X_CHEATS; r[n++] = X_QUIT;
+        r[n++] = X_CLOSE;
+        break;
+    case P_PAUSE:
+        r[n++] = X_RESUME; r[n++] = X_CHEAT_HEALTH; r[n++] = X_CHEAT_AMMO; r[n++] = X_VISUALS; r[n++] = X_QUIT;
+        break;
+    case P_CHEATS: r[n++] = X_CHEAT_HEALTH; r[n++] = X_CHEAT_AMMO; r[n++] = X_BACK; break;
+    case P_QUIT: r[n++] = X_QUIT_NO; r[n++] = X_QUIT_YES; break;
     case P_SOUND: r[n++] = X_STEREO; r[n++] = X_VOLUME; r[n++] = X_PORT_VOLUME; r[n++] = X_BACK; break;
     case P_CONTROLS:
         r[n++] = X_KEYS; r[n++] = X_PAD; r[n++] = X_DIRECTIONAL;
@@ -219,6 +236,13 @@ static int row_text(int id, char *l, size_t ln, char *v, size_t vn) {
     case X_GRAIN: snprintf(l, ln, "Film grain"); snprintf(v, vn, "%s", onoff(fx_grain)); break;
     case X_GRAIN_S: snprintf(l, ln, "Grain strength"); snprintf(v, vn, "%.2f", fx_grain_strength); live = fx_grain; break;
     case X_MAP_RESET: snprintf(l, ln, "Reset to default"); break;
+    case X_RESUME: snprintf(l, ln, "Back to the game"); break;
+    case X_CHEATS: snprintf(l, ln, "Cheats"); break;
+    case X_CHEAT_HEALTH: snprintf(l, ln, "Infinite health"); snprintf(v, vn, "%s", onoff(cheat_health)); break;
+    case X_CHEAT_AMMO: snprintf(l, ln, "Infinite ammo"); snprintf(v, vn, "%s", onoff(cheat_ammo)); break;
+    case X_QUIT: snprintf(l, ln, "Quit to desktop"); break;
+    case X_QUIT_NO: snprintf(l, ln, "No, go back"); break;
+    case X_QUIT_YES: snprintf(l, ln, "Yes, quit to desktop"); break;
     default:
         if (id >= X_MAP0 && id < X_MAP0 + 8) {
             int b = gopt_map_get(id - X_MAP0);
@@ -241,6 +265,7 @@ static void save_int(const char *key, int v) { char t[32]; snprintf(t, sizeof t,
 
 void menu_action(int action);
 static void start_excursion(void);
+static void menu_pause_open(void);
 
 /* Left (d -1), Right (d 1) or Cross (d 0) on a row that holds a value */
 static void row_change(int id, int d) {
@@ -287,6 +312,16 @@ static void row_change(int id, int d) {
     case X_GRAIN: fx_grain = !fx_grain; save_int("grain", fx_grain); break;
     case X_GRAIN_S: fx_grain_strength = fx_step(fx_grain_strength, step, 0.1f, 3.0f); save_float("grain_strength", fx_grain_strength); break;
     case X_MAP_RESET: gopt_map_reset(); osd_show("Button layout, vibration and control type reset"); break;
+    case X_CHEAT_HEALTH:
+        cheat_health = !cheat_health;
+        save_int("cheat_health", cheat_health);
+        LOG("cheats: infinite health %s\n", onoff(cheat_health));
+        break;
+    case X_CHEAT_AMMO:
+        cheat_ammo = !cheat_ammo;
+        save_int("cheat_ammo", cheat_ammo);
+        LOG("cheats: infinite ammo %s\n", onoff(cheat_ammo));
+        break;
     default:
         if (id >= X_MAP0 && id < X_MAP0 + 8) {
             int b = gopt_map_get(id - X_MAP0), k = 0;
@@ -332,6 +367,7 @@ void menu_action(int action) {
     case ACT_STATE_LOAD: state_action(1, 0); break;
     case ACT_STATE_NEXT: state_action(2, 0); break;
     case ACT_STATE_PREV: state_action(3, 0); break;
+    case ACT_MENU: menu_pause_open(); break;
     }
 }
 
@@ -343,6 +379,7 @@ static void open_menu(int at_page, int at_cursor) {
     LOG("options menu: open (frame %llu)\n", (unsigned long long)frame_count);
     menu_open = 1;
     input_blocked = 1;
+    home = at_page == P_PAUSE ? P_PAUSE : P_ROOT;
     page = at_page; cursor = at_cursor; scroll = 0; capture = 0;
 }
 
@@ -352,12 +389,76 @@ static void close_menu(void) {
     menu_open = 0;
     capture = 0;
     closing = 1;
+    paused = 0;
+}
+
+/* act_menu: the in-game menu, the game paused (not over the options menu, its way to the credits / gallery, or with no
+ * menu possible: software renderer, no font) */
+static void menu_pause_open(void) {
+    if (menu_open || closing || ex != EX_NONE || !menu_allowed()) return;
+    LOG("in-game menu: game paused (frame %llu)\n", (unsigned long long)frame_count);
+    open_menu(P_PAUSE, 0);
+    paused = 1;
+}
+int menu_paused(void) { return paused && menu_open; }
+
+static void quit_to_desktop(void) {
+    LOG("quit to desktop from the menu (frame %llu)\n", (unsigned long long)frame_count);
+    exit(0); /* as closing the window (SDL_QUIT) */
+}
+
+/* the cheats, at every vblank: the ammo flag; health while the game runs the player (not in its menus or scenes) */
+void menu_cheats_vblank(void) {
+    static int ammo_set, dbg = -1;
+    static int last_hp = -1;
+    if (dbg < 0) dbg = getenv("FE_DBG_CHEATS") != 0;
+    int g = gopt_game();
+    if (!g) return;
+    uint32_t flag = g == 1 ? 0x80077810u : 0x8007B4F8u;
+    if (cheat_ammo) {
+        if (!(mem_r8(flag) & 1)) {
+            if (dbg) LOG("cheats: frame %llu ammo flag %08X set\n", (unsigned long long)frame_count, flag);
+            mem_w8(flag, (uint8_t)(mem_r8(flag) | 1));
+        }
+        ammo_set = 1;
+    }
+    else if (ammo_set) { mem_w8(flag, (uint8_t)(mem_r8(flag) & ~1)); ammo_set = 0; }
+    /* the flag keeps only the spare ammo (and not every gun's in FE1); the rounds in the gun still run out, and FE2
+     * never reloads by itself: every owned gun's magazine is kept at the highest count seen while the cheat is on (an
+     * empty FE2 gun gets 99). FE1: 4 records 0x84 apart from 0x8008DF00, a weapon per 4 bytes from +0x0C (owned u16,
+     * rounds u16); FE2: 4 records 0x100 apart from 0x8008BF50, weapon k at +0x18 + 8k (owned) and +0x1C + 8k (rounds) */
+    static int16_t best[4][17];
+    if (!cheat_ammo) memset(best, 0, sizeof best);
+    else
+        for (int i = 0; i < 4; i++)
+            for (int k = g == 1 ? 0 : 1; k < (g == 1 ? 11 : 17); k++) {
+                uint32_t own = g == 1 ? 0x8008DF00u + 0x84u * (uint32_t)i + 0x0Cu + 4u * (uint32_t)k
+                                      : 0x8008BF50u + 0x100u * (uint32_t)i + 0x18u + 8u * (uint32_t)k;
+                uint32_t mag = own + (g == 1 ? 2u : 4u);
+                if (!(g == 1 ? mem_r16(own) : mem_r8(own))) { best[i][k] = 0; continue; }
+                int16_t m = (int16_t)mem_r16(mag);
+                if (g == 2 && m <= 0 && best[i][k] <= 0) best[i][k] = 99;
+                if (m > best[i][k]) best[i][k] = m;
+                else if (m < best[i][k]) {
+                    if (dbg) LOG("cheats: frame %llu rounds %08X %d -> %d\n", (unsigned long long)frame_count, mag, m, best[i][k]);
+                    mem_w16(mag, (uint16_t)best[i][k]);
+                }
+            }
+    int controls_player_info(uint32_t *actor, int32_t pos[3]);
+    uint32_t actor;
+    int32_t pos[3];
+    int since = controls_player_info(&actor, pos);
+    if (!actor || since < 0 || since > 120) return;
+    int hp = mem_r8(actor + 0x68);
+    if (dbg && hp != last_hp) LOG("cheats: frame %llu health %d\n", (unsigned long long)frame_count, hp);
+    last_hp = hp;
+    if (cheat_health && hp < 0x7F) mem_w8(actor + 0x68, 0x7F);
 }
 
 /* save states: a load ends any walk through the game's screens and closes the menu; the pad goes straight back */
 void menu_state_loaded(void) {
     if (menu_open) LOG("options menu: closed by a state load\n");
-    menu_open = 0; capture = 0; closing = 0;
+    menu_open = 0; capture = 0; closing = 0; paused = 0;
     ex = EX_NONE; ex_t = ex_tick = ex_reopen = ex_wait = 0;
     input_blocked = 0;
     prev_raw = 0xFFFF; /* a button held through the load is not a new press */
@@ -366,21 +467,23 @@ int menu_busy(void) { return menu_open || closing || ex != EX_NONE; }
 
 /* headless tests: FE_MENU_TEST=1 lets the menu open; FE_MENU_KEYS="frame:scancode,..." types keys into it */
 static void test_keys(void) {
-    const char *k = getenv("FE_MENU_KEYS");
-    while (k && *k) {
-        long long f;
-        int sc;
-        if (sscanf(k, "%lld:%d", &f, &sc) == 2 && (long long)frame_count == f) {
-            SDL_Event e;
-            memset(&e, 0, sizeof e);
-            e.type = SDL_KEYDOWN;
-            e.key.keysym.scancode = (SDL_Scancode)sc;
-            LOG("menu test: key %d at frame %lld (open %d page %d cursor %d)\n", sc, f, menu_open, page, cursor);
-            menu_event(&e);
-        }
-        k = strchr(k, ',');
-        if (k) k++;
-    }
+    static const char *k;
+    static int started;
+    if (!started) { k = getenv("FE_MENU_KEYS"); started = 1; }
+    /* the keys in order, one per call from its frame on (the frame stands still while the game is paused) */
+    long long f;
+    int sc;
+    if (!k || !*k || sscanf(k, "%lld:%d", &f, &sc) != 2 || (long long)frame_count < f) return;
+    k = strchr(k, ',');
+    if (k) k++;
+    LOG("menu test: key %d at frame %llu (open %d page %d cursor %d)\n", sc, (unsigned long long)frame_count, menu_open,
+        page, cursor);
+    if (!menu_open && sc == SDL_SCANCODE_ESCAPE) { menu_action(ACT_MENU); return; } /* the in-game menu's key */
+    SDL_Event e;
+    memset(&e, 0, sizeof e);
+    e.type = SDL_KEYDOWN;
+    e.key.keysym.scancode = (SDL_Scancode)sc;
+    menu_event(&e);
 }
 
 void menu_vblank(void) {
@@ -521,15 +624,26 @@ static void go_page(int p, int at) { page = p; cursor = at; scroll = 0; }
 /* the row of a sub page's parent that leads to it */
 static void go_back(void) {
     int r[64], n, c = 0, want;
-    int parent = page == P_KEYS || page == P_PAD || page == P_LAYOUT ? P_CONTROLS : P_ROOT;
+    int parent = page == P_KEYS || page == P_PAD || page == P_LAYOUT ? P_CONTROLS : home;
     want = page == P_SOUND ? X_SOUND : page == P_CONTROLS ? X_CONTROLS : page == P_GAME ? X_GAME : page == P_VISUALS ? X_VISUALS
-         : page == P_KEYS ? X_KEYS : page == P_PAD ? X_PAD : X_LAYOUT;
+         : page == P_KEYS ? X_KEYS : page == P_PAD ? X_PAD : page == P_CHEATS ? X_CHEATS : page == P_QUIT ? X_QUIT : X_LAYOUT;
     n = page_rows(parent, r);
     while (c < n && r[c] != want) c++;
     go_page(parent, c < n ? c : 0);
 }
 
 int menu_event(const SDL_Event *e) {
+    static int dbg = -1;
+    if (dbg < 0) dbg = getenv("FE_DBG_MENU") != 0;
+    if (dbg && (e->type == SDL_CONTROLLERBUTTONDOWN || e->type == SDL_CONTROLLERBUTTONUP ||
+                (e->type == SDL_CONTROLLERAXISMOTION && (e->caxis.value > 8000 || e->caxis.value < -8000))))
+        LOG("menu: %s %d %d (open %d closing %d page %d cursor %d, frame %llu)\n",
+            e->type == SDL_CONTROLLERAXISMOTION ? "axis" : e->type == SDL_CONTROLLERBUTTONDOWN ? "down" : "up",
+            e->type == SDL_CONTROLLERAXISMOTION ? e->caxis.axis : e->cbutton.button,
+            e->type == SDL_CONTROLLERAXISMOTION ? e->caxis.value : 0, menu_open, closing, page, cursor,
+            (unsigned long long)frame_count);
+    if (dbg && e->type == SDL_KEYDOWN)
+        LOG("menu: key %d repeat %d (open %d page %d cursor %d)\n", e->key.keysym.scancode, e->key.repeat, menu_open, page, cursor);
     if (!menu_open) return 0;
     int rv[B_COUNT + 2 > 64 ? B_COUNT + 2 : 64], n = rows_now(rv);
     if (capture) {
@@ -590,7 +704,7 @@ int menu_event(const SDL_Event *e) {
     }
     int id = rv[cursor];
     if (back) {
-        if (page == P_ROOT) close_menu();
+        if (page == home) close_menu();
         else go_back();
         return 1;
     }
@@ -607,6 +721,11 @@ int menu_event(const SDL_Event *e) {
     case X_PAD: go_page(P_PAD, 0); break;
     case X_LAYOUT: go_page(P_LAYOUT, 0); break;
     case X_EXTRA: start_excursion(); break;
+    case X_RESUME: close_menu(); break;
+    case X_CHEATS: go_page(P_CHEATS, 0); break;
+    case X_QUIT: go_page(P_QUIT, 0); break; /* "No" first */
+    case X_QUIT_NO: go_back(); break;
+    case X_QUIT_YES: quit_to_desktop(); break;
     default: row_change(id, 0); break;
     }
     return 1;
@@ -636,6 +755,9 @@ static const char *page_title(void) {
     case P_KEYS: return "controls  -  keyboard";
     case P_PAD: return "controls  -  gamepad";
     case P_LAYOUT: return "controls  -  button layout";
+    case P_PAUSE: return "paused";
+    case P_CHEATS: return "cheats";
+    case P_QUIT: return "quit to desktop?";
     }
     return "options";
 }
@@ -653,9 +775,12 @@ static void draw_menu(int w, int h, Style st, float s) {
     char t[96];
     if (game_fe1()) ui_text(UI_TITLE, px + 60 * s, py + 30 * s, 84 * s, st.title, page_title());
     else {
-        upper(t, page == P_ROOT ? "options" : "options", sizeof t);
+        upper(t, page == P_PAUSE ? "paused" : "options", sizeof t);
         ui_text(UI_TITLE, px + 60 * s, py + 30 * s, 84 * s, st.title, t);
-        if (page != P_ROOT) { upper(t, page_title(), sizeof t); ui_text(UI_BODY, px + 330 * s, py + 52 * s, 50 * s, st.value, t); }
+        if (page != P_ROOT && page != P_PAUSE) {
+            upper(t, page_title(), sizeof t);
+            ui_text(UI_BODY, px + 330 * s, py + 52 * s, 50 * s, st.value, t);
+        }
     }
     float y0 = py + 150 * s, lh = 50 * s, size = 44 * s;
     int vis = page == P_PAD && !input_has_controller() ? 12 : 13;
@@ -705,6 +830,8 @@ static void draw_menu(int w, int h, Style st, float s) {
             float vw = ui_text_width(UI_BODY, size, val);
             ui_text(UI_BODY, px + pw - 70 * s - vw, y, size, sel && live ? st.sel : live ? st.value : st.dim, val);
         }
+        if (page == P_QUIT) /* what quitting means */
+            ui_text(UI_BODY, px + 70 * s, py + ph - 200 * s, 36 * s, st.value, "Progress since your last save is lost.");
         if (page == P_CONTROLS && r[cursor] == X_PRESET) { /* what the configuration does */
             int p = gopt_get(GO_PRESET) & 3;
             for (int k = 0; k < 2; k++) {
@@ -716,6 +843,8 @@ static void draw_menu(int w, int h, Style st, float s) {
     }
     const char *hint = page == P_KEYS || page == P_PAD ? "Cross / Enter  change        Triangle / Esc  back"
                        : page == P_ROOT ? "Cross / Enter  select        Triangle / Esc  back to the main menu"
+                       : page == P_PAUSE ? "Cross / Enter  select        Triangle / Esc  back to the game"
+                       : page == P_QUIT ? "Cross / Enter  select        Triangle / Esc  back"
                                         : "Left / Right  change        Cross / Enter  select        Triangle / Esc  back";
     float hs = 36 * s, hw = ui_text_width(UI_BODY, hs, hint);
     if (hw > pw - 120 * s) hs *= (pw - 120 * s) / hw; /* FE1's typewriter font is wide */

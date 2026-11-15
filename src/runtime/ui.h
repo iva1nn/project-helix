@@ -18,6 +18,8 @@ int menu_event(const SDL_Event *e);          /* 1 = the menu used the event */
 void menu_draw(int w, int h);                /* in the window, after the game picture */
 void menu_filter_pad(void);                  /* before the pad state is recorded: blocked input, injected presses */
 void osd_show(const char *text);             /* a short notice */
+int menu_paused(void);                       /* the in-game menu is open: the game stands still (main.c) */
+void menu_cheats_vblank(void);               /* the cheats chosen in the menu, written at every vblank */
 extern int menu_open;
 
 /* subs.c */
