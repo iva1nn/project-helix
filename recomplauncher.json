@@ -1,0 +1,979 @@
+{
+  "$schema": "https://recomplauncher.com/schema/recomplauncher.json",
+  "format": 1,
+  "name": "Fear Effect",
+  "repo": "iva1nn/project-helix",
+  "inputs": [
+    {
+      "id": "fe1d1",
+      "role": "disc",
+      "label": "Fear Effect, disc 1 of 4, USA, serial SLUS-00920. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe1d2",
+      "role": "disc",
+      "label": "Fear Effect, disc 2 of 4, USA, serial SLUS-01056. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe1d3",
+      "role": "disc",
+      "label": "Fear Effect, disc 3 of 4, USA, serial SLUS-01057. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe1d4",
+      "role": "disc",
+      "label": "Fear Effect, disc 4 of 4, USA, serial SLUS-01058. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe1assets",
+      "role": "dlc",
+      "label": "The extracted Fear Effect remaster pack. Pick the folder that contains fe1 and manifests (in the downloaded archive, that is the data folder). Extract the .7z first. If the pack is already inside this install, pick that data folder.",
+      "formats": [
+        {
+          "type": "folder"
+        }
+      ]
+    },
+    {
+      "id": "fe2d1",
+      "role": "disc",
+      "label": "Fear Effect 2: Retro Helix, disc 1 of 4, USA v1.1, serial SLUS-01266. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe2d2",
+      "role": "disc",
+      "label": "Fear Effect 2: Retro Helix, disc 2 of 4, USA v1.1, serial SLUS-01275. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe2d3",
+      "role": "disc",
+      "label": "Fear Effect 2: Retro Helix, disc 3 of 4, USA v1.1, serial SLUS-01276. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe2d4",
+      "role": "disc",
+      "label": "Fear Effect 2: Retro Helix, disc 4 of 4, USA v1.1, serial SLUS-01277. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
+      "formats": [
+        {
+          "type": "file",
+          "extensions": [
+            "cue",
+            "bin",
+            "img",
+            "iso"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fe2assets",
+      "role": "dlc",
+      "label": "The extracted Fear Effect 2 remaster pack. Pick the folder that contains fe2 and manifests (in the downloaded archive, that is the data folder). Extract the .7z first. If the pack is already inside this install, pick that data folder.",
+      "formats": [
+        {
+          "type": "folder"
+        }
+      ]
+    }
+  ],
+  "games": [
+    {
+      "id": "fe1",
+      "name": "Fear Effect",
+      "args": [
+        "--game",
+        "fe1"
+      ],
+      "inputs": [
+        "fe1d1",
+        "fe1d2",
+        "fe1d3",
+        "fe1d4",
+        "fe1assets"
+      ],
+      "saves": [
+        "{install}/Fear Effect/memcards",
+        "{install}/Fear Effect/states",
+        "{install}/Fear Effect/fe1port.ini"
+      ]
+    },
+    {
+      "id": "fe2",
+      "name": "Fear Effect 2: Retro Helix",
+      "args": [
+        "--game",
+        "fe2"
+      ],
+      "inputs": [
+        "fe2d1",
+        "fe2d2",
+        "fe2d3",
+        "fe2d4",
+        "fe2assets"
+      ],
+      "saves": [
+        "{install}/Fear Effect 2/memcards",
+        "{install}/Fear Effect 2/states",
+        "{install}/Fear Effect 2/fe2port.ini"
+      ]
+    }
+  ],
+  "start": {
+    "program": [
+      "play.bat",
+      "play.sh"
+    ]
+  },
+  "prepare": {
+    "program": [
+      "install.bat",
+      "install.sh"
+    ],
+    "args": [
+      "--prepare",
+      "--no-shortcuts",
+      "--no-steam",
+      "--yes",
+      "--launcher-disc={input:fe1d1}",
+      "--launcher-disc={input:fe1d2}",
+      "--launcher-disc={input:fe1d3}",
+      "--launcher-disc={input:fe1d4}",
+      "--launcher-disc={input:fe2d1}",
+      "--launcher-disc={input:fe2d2}",
+      "--launcher-disc={input:fe2d3}",
+      "--launcher-disc={input:fe2d4}",
+      "--launcher-assets={input:fe1assets}",
+      "--launcher-assets={input:fe2assets}"
+    ],
+    "label": "Building the game from your discs",
+    "timeout": 3600,
+    "version": "1"
+  },
+  "config": [
+    {
+      "id": "fe1",
+      "format": "ini",
+      "file": [
+        {
+          "path": "{install}/Fear Effect/fe1port.ini"
+        }
+      ]
+    },
+    {
+      "id": "fe2",
+      "format": "ini",
+      "file": [
+        {
+          "path": "{install}/Fear Effect 2/fe2port.ini"
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "Fear Effect"
+    },
+    {
+      "id": "Fear Effect 2"
+    },
+    {
+      "id": "Fear Effect, more",
+      "advanced": true
+    },
+    {
+      "id": "Fear Effect 2, more",
+      "advanced": true
+    }
+  ],
+  "settings": [
+    {
+      "id": "fe1_scale",
+      "label": "Picture size",
+      "help": "How sharp the picture is: 8 is the remaster, and 1 is the PlayStation size.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "choices": [
+        {
+          "label": "8x remaster",
+          "set": {
+            "game/scale": "8"
+          }
+        },
+        {
+          "label": "4x",
+          "set": {
+            "game/scale": "4"
+          }
+        },
+        {
+          "label": "2x",
+          "set": {
+            "game/scale": "2"
+          }
+        },
+        {
+          "label": "1x, PlayStation size",
+          "set": {
+            "game/scale": "1"
+          }
+        }
+      ],
+      "defaults": {
+        "game/scale": "8"
+      }
+    },
+    {
+      "id": "fe1_display",
+      "label": "Display",
+      "help": "Borderless fullscreen, or a window.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "choices": [
+        {
+          "label": "Fullscreen",
+          "set": {
+            "game/display": "fullscreen"
+          }
+        },
+        {
+          "label": "Window",
+          "set": {
+            "game/display": "windowed"
+          }
+        }
+      ],
+      "defaults": {
+        "game/display": "fullscreen"
+      }
+    },
+    {
+      "id": "fe1_fill",
+      "label": "Widescreen",
+      "help": "How the picture uses a wide screen: the HUD in bands, the HUD over the picture, or the original 4:3.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "choices": [
+        {
+          "label": "HUD in bands",
+          "set": {
+            "game/fill": "1"
+          }
+        },
+        {
+          "label": "HUD over the picture",
+          "set": {
+            "game/fill": "2"
+          }
+        },
+        {
+          "label": "Original 4:3",
+          "set": {
+            "game/fill": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/fill": "1"
+      }
+    },
+    {
+      "id": "fe1_smooth",
+      "label": "Smooth characters",
+      "help": "Smoother character movement at 60 frames a second. The game itself still runs at 30.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "choices": [
+        {
+          "label": "60 fps movement",
+          "set": {
+            "game/smooth": "1"
+          }
+        },
+        {
+          "label": "Console 30 fps",
+          "set": {
+            "game/smooth": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/smooth": "1"
+      }
+    },
+    {
+      "id": "fe1_cd_speed",
+      "label": "Loading",
+      "help": "How fast the disc loads. Voices and movies keep their original speed.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "choices": [
+        {
+          "label": "Fast",
+          "set": {
+            "game/cd_speed": "8"
+          }
+        },
+        {
+          "label": "Original CD speed",
+          "set": {
+            "game/cd_speed": "1"
+          }
+        }
+      ],
+      "defaults": {
+        "game/cd_speed": "8"
+      }
+    },
+    {
+      "id": "fe1_directional",
+      "label": "Controls",
+      "help": "The stick moves the character the way they face on screen. Off is the original tank controls.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "choices": [
+        {
+          "label": "Camera relative",
+          "set": {
+            "game/directional": "1"
+          }
+        },
+        {
+          "label": "Original tank controls",
+          "set": {
+            "game/directional": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/directional": "1"
+      }
+    },
+    {
+      "id": "fe1_volume",
+      "label": "Volume",
+      "help": "How loud the game is, as a percent.",
+      "in": "fe1",
+      "group": "Fear Effect",
+      "slider": {
+        "key": "game/volume",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "format": "%d"
+      },
+      "defaults": {
+        "game/volume": "100"
+      }
+    },
+    {
+      "id": "fe1_models",
+      "label": "Character models",
+      "help": "The remastered character models.",
+      "in": "fe1",
+      "group": "Fear Effect, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/models": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/models": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/models": "1"
+      }
+    },
+    {
+      "id": "fe1_bloom",
+      "label": "Bloom",
+      "help": "A glow on the brightest lights.",
+      "in": "fe1",
+      "group": "Fear Effect, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/bloom": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/bloom": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/bloom": "1"
+      }
+    },
+    {
+      "id": "fe1_vignette",
+      "label": "Vignette",
+      "help": "Darker corners.",
+      "in": "fe1",
+      "group": "Fear Effect, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/vignette": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/vignette": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/vignette": "1"
+      }
+    },
+    {
+      "id": "fe1_grain",
+      "label": "Film grain",
+      "help": "Film grain over the picture.",
+      "in": "fe1",
+      "group": "Fear Effect, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/grain": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/grain": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/grain": "1"
+      }
+    },
+    {
+      "id": "fe1_movie_60fps",
+      "label": "Room movies",
+      "help": "Room movies play their in-between pictures. Off uses only the original frames.",
+      "in": "fe1",
+      "group": "Fear Effect, more",
+      "choices": [
+        {
+          "label": "Smoother",
+          "set": {
+            "game/movie_60fps": "1"
+          }
+        },
+        {
+          "label": "Original frames",
+          "set": {
+            "game/movie_60fps": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/movie_60fps": "1"
+      }
+    },
+    {
+      "id": "fe1_renderer",
+      "label": "Renderer",
+      "help": "OpenGL, or the software picture with no remaster and no effects.",
+      "in": "fe1",
+      "group": "Fear Effect, more",
+      "choices": [
+        {
+          "label": "OpenGL",
+          "set": {
+            "game/renderer": "hw"
+          }
+        },
+        {
+          "label": "Software",
+          "set": {
+            "game/renderer": "sw"
+          }
+        }
+      ],
+      "defaults": {
+        "game/renderer": "hw"
+      }
+    },
+    {
+      "id": "fe2_scale",
+      "label": "Picture size",
+      "help": "How sharp the picture is: 8 is the remaster, and 1 is the PlayStation size.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "choices": [
+        {
+          "label": "8x remaster",
+          "set": {
+            "game/scale": "8"
+          }
+        },
+        {
+          "label": "4x",
+          "set": {
+            "game/scale": "4"
+          }
+        },
+        {
+          "label": "2x",
+          "set": {
+            "game/scale": "2"
+          }
+        },
+        {
+          "label": "1x, PlayStation size",
+          "set": {
+            "game/scale": "1"
+          }
+        }
+      ],
+      "defaults": {
+        "game/scale": "8"
+      }
+    },
+    {
+      "id": "fe2_display",
+      "label": "Display",
+      "help": "Borderless fullscreen, or a window.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "choices": [
+        {
+          "label": "Fullscreen",
+          "set": {
+            "game/display": "fullscreen"
+          }
+        },
+        {
+          "label": "Window",
+          "set": {
+            "game/display": "windowed"
+          }
+        }
+      ],
+      "defaults": {
+        "game/display": "fullscreen"
+      }
+    },
+    {
+      "id": "fe2_fill",
+      "label": "Widescreen",
+      "help": "How the picture uses a wide screen: the HUD in bands, the HUD over the picture, or the original 4:3.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "choices": [
+        {
+          "label": "HUD in bands",
+          "set": {
+            "game/fill": "1"
+          }
+        },
+        {
+          "label": "HUD over the picture",
+          "set": {
+            "game/fill": "2"
+          }
+        },
+        {
+          "label": "Original 4:3",
+          "set": {
+            "game/fill": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/fill": "1"
+      }
+    },
+    {
+      "id": "fe2_smooth",
+      "label": "Smooth characters",
+      "help": "Smoother character movement at 60 frames a second. The game itself still runs at 30.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "choices": [
+        {
+          "label": "60 fps movement",
+          "set": {
+            "game/smooth": "1"
+          }
+        },
+        {
+          "label": "Console 30 fps",
+          "set": {
+            "game/smooth": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/smooth": "1"
+      }
+    },
+    {
+      "id": "fe2_cd_speed",
+      "label": "Loading",
+      "help": "How fast the disc loads. Voices and movies keep their original speed.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "choices": [
+        {
+          "label": "Fast",
+          "set": {
+            "game/cd_speed": "8"
+          }
+        },
+        {
+          "label": "Original CD speed",
+          "set": {
+            "game/cd_speed": "1"
+          }
+        }
+      ],
+      "defaults": {
+        "game/cd_speed": "8"
+      }
+    },
+    {
+      "id": "fe2_directional",
+      "label": "Controls",
+      "help": "The stick moves the character the way they face on screen. Off is the original tank controls.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "choices": [
+        {
+          "label": "Camera relative",
+          "set": {
+            "game/directional": "1"
+          }
+        },
+        {
+          "label": "Original tank controls",
+          "set": {
+            "game/directional": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/directional": "1"
+      }
+    },
+    {
+      "id": "fe2_volume",
+      "label": "Volume",
+      "help": "How loud the game is, as a percent.",
+      "in": "fe2",
+      "group": "Fear Effect 2",
+      "slider": {
+        "key": "game/volume",
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "format": "%d"
+      },
+      "defaults": {
+        "game/volume": "100"
+      }
+    },
+    {
+      "id": "fe2_models",
+      "label": "Character models",
+      "help": "The remastered character models.",
+      "in": "fe2",
+      "group": "Fear Effect 2, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/models": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/models": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/models": "1"
+      }
+    },
+    {
+      "id": "fe2_bloom",
+      "label": "Bloom",
+      "help": "A glow on the brightest lights.",
+      "in": "fe2",
+      "group": "Fear Effect 2, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/bloom": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/bloom": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/bloom": "1"
+      }
+    },
+    {
+      "id": "fe2_vignette",
+      "label": "Vignette",
+      "help": "Darker corners.",
+      "in": "fe2",
+      "group": "Fear Effect 2, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/vignette": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/vignette": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/vignette": "1"
+      }
+    },
+    {
+      "id": "fe2_grain",
+      "label": "Film grain",
+      "help": "Film grain over the picture.",
+      "in": "fe2",
+      "group": "Fear Effect 2, more",
+      "choices": [
+        {
+          "label": "On",
+          "set": {
+            "game/grain": "1"
+          }
+        },
+        {
+          "label": "Off",
+          "set": {
+            "game/grain": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/grain": "1"
+      }
+    },
+    {
+      "id": "fe2_movie_60fps",
+      "label": "Room movies",
+      "help": "Room movies play their in-between pictures. Off uses only the original frames.",
+      "in": "fe2",
+      "group": "Fear Effect 2, more",
+      "choices": [
+        {
+          "label": "Smoother",
+          "set": {
+            "game/movie_60fps": "1"
+          }
+        },
+        {
+          "label": "Original frames",
+          "set": {
+            "game/movie_60fps": "0"
+          }
+        }
+      ],
+      "defaults": {
+        "game/movie_60fps": "1"
+      }
+    },
+    {
+      "id": "fe2_renderer",
+      "label": "Renderer",
+      "help": "OpenGL, or the software picture with no remaster and no effects.",
+      "in": "fe2",
+      "group": "Fear Effect 2, more",
+      "choices": [
+        {
+          "label": "OpenGL",
+          "set": {
+            "game/renderer": "hw"
+          }
+        },
+        {
+          "label": "Software",
+          "set": {
+            "game/renderer": "sw"
+          }
+        }
+      ],
+      "defaults": {
+        "game/renderer": "hw"
+      }
+    }
+  ],
+  "looks": {
+    "graphics": "opengl",
+    "lines": 240
+  },
+  "folders": {
+    "fe1_saves": [
+      {
+        "path": "{install}/Fear Effect"
+      }
+    ],
+    "fe2_saves": [
+      {
+        "path": "{install}/Fear Effect 2"
+      }
+    ],
+    "logs": [
+      {
+        "path": "{install}"
+      }
+    ],
+    "saves": [
+      {
+        "path": "{install}/Fear Effect",
+        "if": "{install}/Fear Effect"
+      },
+      {
+        "path": "{install}/Fear Effect 2",
+        "if": "{install}/Fear Effect 2"
+      },
+      {
+        "path": "{install}"
+      }
+    ]
+  },
+  "saves": [
+    "{install}/Fear Effect/memcards",
+    "{install}/Fear Effect/states",
+    "{install}/Fear Effect/fe1port.ini",
+    "{install}/Fear Effect 2/memcards",
+    "{install}/Fear Effect 2/states",
+    "{install}/Fear Effect 2/fe2port.ini"
+  ],
+  "actions": [
+    {
+      "id": "open_fe1",
+      "label": "Open the Fear Effect folder",
+      "open": "fe1_saves",
+      "help": "The game, its memory card and its save states."
+    },
+    {
+      "id": "open_fe2",
+      "label": "Open the Fear Effect 2 folder",
+      "open": "fe2_saves",
+      "help": "The game, its memory card and its save states."
+    },
+    {
+      "id": "open_log",
+      "label": "Open the install folder",
+      "open": "logs",
+      "help": "install.log is in this folder."
+    }
+  ],
+  "exit_codes": {
+    "3": "This game has not been built yet. Set it up with all four discs and the asset pack.",
+    "1": "The game could not start. Often a disc image could not be opened."
+  }
+}

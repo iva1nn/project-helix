@@ -1,5 +1,7 @@
 # Fear Effect — native PC port
 
+<a href="https://recomplauncher.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
+
 **Fear Effect** and **Fear Effect 2: Retro Helix**, running natively on Windows and **Steam Deck / SteamOS** with
 no emulator, remastered.
 
@@ -14,6 +16,9 @@ Curious how the characters stay steady without the PlayStation wobble? See **[Ho
 
 > This repository contains **no game code and no game data**. The installer builds the game on your PC from
 > **your own discs**. The remastered assets are a separate download.
+
+RecompLauncher can do that setup for you: it asks for your four discs and the asset pack, builds the game
+and puts the picture settings on the game's page. `install.bat` and `install.sh` work as before.
 
 ---
 

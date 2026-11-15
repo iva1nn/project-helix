@@ -1,0 +1,37 @@
+# Attaches one archive per system when a GitHub release is published. RecompLauncher
+# picks the file from the name, and recomplauncher.json is at the top of each archive.
+# The tree is the repository: no discs, no asset packs, no built game.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pack Windows and Linux archives
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          git archive --format=zip -o "FearEffect-${tag}-Windows-x64.zip" HEAD
+          rm -rf stage
+          mkdir stage
+          git archive HEAD | tar -x -C stage
+          find stage -name '*.bat' -delete
+          chmod +x stage/install.sh stage/play.sh
+          tar -C stage -czf "FearEffect-${tag}-Linux-x64.tar.gz" .
+          rm -rf stage
+
+      - name: Upload to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            FearEffect-*-Windows-x64.zip
+            FearEffect-*-Linux-x64.tar.gz
