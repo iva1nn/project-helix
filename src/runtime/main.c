@@ -370,9 +370,76 @@ void frontend_shot(const char *path) { /* agent.c: the software frame */
     write_png(path, frame_rgb, fb_w, fb_h);
 }
 
+/* the window's picture: the game's display (hardware renderer: upscaled, with the overlay), paced */
+static void present_window(void) {
+    if (hw_active) {
+        GpuDisplay dd;
+        gpu_display(&dd);
+        int ww, wh;
+        SDL_GL_GetDrawableSize(win, &ww, &wh);
+        int vw = ww, vh = ww * 3 / 4; /* 4:3 picture, letterboxed */
+        if (vh > wh) { vh = wh; vw = wh * 4 / 3; }
+        int vx = (ww - vw) / 2, vy = (wh - vh) / 2;
+        if (dd.depth24) {
+            build_frame();
+            hw_present_rgb(frame_rgb, fb_w, fb_h, vx, vy, vw, vh, ww, wh);
+        } else {
+            uint64_t pt = perf_now();
+            hw_present(&dd, vx, vy, vw, vh, ww, wh);
+            perf_add(PS_PRESENT, pt);
+        }
+        hw_bench_frame(); /* FE_GPU_TIME only */
+        if (perf_detail()) {
+            static uint64_t last;
+            uint64_t t = SDL_GetPerformanceCounter();
+            double dt = last ? (double)(t - last) * 1000.0 / (double)SDL_GetPerformanceFrequency() : 0, q = audio_queue_ms();
+            last = t;
+            if (dt > 20.0 || (audio_dev && q < 15.0)) {
+                double present = perf_stage[PS_PRESENT] - perf_stage[PS_PACE];
+                double emu = dt - perf_stage[PS_MOVIE] - perf_stage[PS_UPLOAD] - perf_stage[PS_SEEK] - perf_stage[PS_PRESENT];
+                LOG("perf: frame %llu took %.1f ms: emulation %.1f, movie frame %.1f, 8x upload %.1f, seek %.1f, present %.1f, "
+                    "limiter %.1f; audio queue %.0f ms\n", (unsigned long long)frame_count, dt, emu, perf_stage[PS_MOVIE],
+                    perf_stage[PS_UPLOAD], perf_stage[PS_SEEK], present, perf_stage[PS_PACE], q);
+            }
+            memset(perf_stage, 0, sizeof perf_stage);
+        }
+    } else {
+    build_frame();
+    if (!tex || 1) {
+        static int tw, th;
+        if (tw != fb_w || th != fb_h) {
+            if (tex) SDL_DestroyTexture(tex);
+            tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, fb_w, fb_h);
+            tw = fb_w; th = fb_h;
+        }
+    }
+    SDL_UpdateTexture(tex, 0, frame_rgb, fb_w * 4);
+    SDL_RenderClear(ren);
+    SDL_RenderCopy(ren, tex, 0, 0);
+    pace();
+    SDL_RenderPresent(ren);
+    }
+}
+
 int frontend_vblank(void) {
     state_vblank(); /* a load requested at the last vblank (leaves through a longjmp) */
+    menu_cheats_vblank();
     if (opt_headless) {
+        /* the in-game menu (headless only in menu tests): the game stands still while the test keys drive it */
+        for (int guard = 0; menu_paused() && guard < 100000; guard++) {
+            menu_vblank();
+            /* FE_MENU_SHOTS=N: a screen picture after each of the first N steps (--dump-screen, --dump-dir) */
+            if (hw_active && opt_screen_w && guard < atoi(getenv("FE_MENU_SHOTS") ? getenv("FE_MENU_SHOTS") : "0")) {
+                GpuDisplay dd;
+                gpu_display(&dd);
+                char p[512];
+                snprintf(p, sizeof p, "%s/menu_%06llu_%02d.png", opt_dump_dir, (unsigned long long)frame_count, guard);
+                uint32_t *shot = hw_screen_capture(&dd, opt_screen_w, opt_screen_h);
+                write_png(p, shot, opt_screen_w, opt_screen_h);
+                free(shot);
+            }
+        }
+        if (menu_paused()) LOG("menu test: still paused after its keys\n");
         uint16_t b = 0;
         for (int i = 0; i < nscript; i++)
             if ((int64_t)frame_count >= script[i].frame && (int64_t)frame_count < script[i].frame + script[i].len)
@@ -454,59 +521,18 @@ int frontend_vblank(void) {
         if (hw_active) hw_bench_frame(); /* FE_GPU_TIME only */
         return 1;
     }
+    /* the in-game menu: the game stands still here, in its vblank, until the menu closes (or the window quits) */
+    while (menu_paused()) {
+        poll_input();
+        present_window();
+    }
     menu_vblank();
     poll_input();
     menu_filter_pad();
     record_or_replay();
     controls_frame();
     audio_frame();
-    if (hw_active) {
-        GpuDisplay dd;
-        gpu_display(&dd);
-        int ww, wh;
-        SDL_GL_GetDrawableSize(win, &ww, &wh);
-        int vw = ww, vh = ww * 3 / 4; /* 4:3 picture, letterboxed */
-        if (vh > wh) { vh = wh; vw = wh * 4 / 3; }
-        int vx = (ww - vw) / 2, vy = (wh - vh) / 2;
-        if (dd.depth24) {
-            build_frame();
-            hw_present_rgb(frame_rgb, fb_w, fb_h, vx, vy, vw, vh, ww, wh);
-        } else {
-            uint64_t pt = perf_now();
-            hw_present(&dd, vx, vy, vw, vh, ww, wh);
-            perf_add(PS_PRESENT, pt);
-        }
-        hw_bench_frame(); /* FE_GPU_TIME only */
-        if (perf_detail()) {
-            static uint64_t last;
-            uint64_t t = SDL_GetPerformanceCounter();
-            double dt = last ? (double)(t - last) * 1000.0 / (double)SDL_GetPerformanceFrequency() : 0, q = audio_queue_ms();
-            last = t;
-            if (dt > 20.0 || (audio_dev && q < 15.0)) {
-                double present = perf_stage[PS_PRESENT] - perf_stage[PS_PACE];
-                double emu = dt - perf_stage[PS_MOVIE] - perf_stage[PS_UPLOAD] - perf_stage[PS_SEEK] - perf_stage[PS_PRESENT];
-                LOG("perf: frame %llu took %.1f ms: emulation %.1f, movie frame %.1f, 8x upload %.1f, seek %.1f, present %.1f, "
-                    "limiter %.1f; audio queue %.0f ms\n", (unsigned long long)frame_count, dt, emu, perf_stage[PS_MOVIE],
-                    perf_stage[PS_UPLOAD], perf_stage[PS_SEEK], present, perf_stage[PS_PACE], q);
-            }
-            memset(perf_stage, 0, sizeof perf_stage);
-        }
-    } else {
-    build_frame();
-    if (!tex || 1) {
-        static int tw, th;
-        if (tw != fb_w || th != fb_h) {
-            if (tex) SDL_DestroyTexture(tex);
-            tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, fb_w, fb_h);
-            tw = fb_w; th = fb_h;
-        }
-    }
-    SDL_UpdateTexture(tex, 0, frame_rgb, fb_w * 4);
-    SDL_RenderClear(ren);
-    SDL_RenderCopy(ren, tex, 0, 0);
-    pace();
-    SDL_RenderPresent(ren);
-    }
+    present_window();
     return 1;
 }
 
@@ -727,6 +753,8 @@ static void load_settings(void) {
         else if (!strcmp(k, "fill")) { extern int hw_fill_mode; hw_fill_mode = atoi(v); }
         else if (!strcmp(k, "models")) models_on = atoi(v);
         else if (!strcmp(k, "smooth")) smooth_on = atoi(v);
+        else if (!strcmp(k, "cheat_health")) { extern int cheat_health; cheat_health = atoi(v) != 0; }
+        else if (!strcmp(k, "cheat_ammo")) { extern int cheat_ammo; cheat_ammo = atoi(v) != 0; }
         else if (!strcmp(k, "audio_latency") && v[0]) audio_target_ms = atoi(v) < 20 ? 20 : atoi(v) > 300 ? 300 : atoi(v);
         else if (!strcmp(k, "model_fix")) { extern int model_fix; model_fix = (int)strtol(v, 0, 0); }
         else if (!strcmp(k, "volume")) audio_volume = atoi(v);
