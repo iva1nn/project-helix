@@ -645,6 +645,17 @@ def adopt_assets(folder):
             if not dst.exists():
                 shutil.copy2(f, dst)
                 linked.append("manifests\\" + f.name)
+    # compiled into the exe; the pack keeps it next to fe1/fe2, not inside them
+    build_src = root / "build"
+    if build_src.is_dir():
+        build_dst = DATA / "build"
+        build_dst.mkdir(exist_ok=True)
+        for f in sorted(p for p in build_src.rglob("*") if p.is_file()):
+            dst = build_dst / f.relative_to(build_src)
+            if not dst.exists():
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(f, dst)
+                linked.append("build\\" + f.relative_to(build_src).as_posix().replace("/", "\\"))
     if linked:
         say("  using the asset pack at %s (%s)" % (folder, ", ".join(linked)))
     else:
