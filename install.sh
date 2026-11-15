@@ -4,8 +4,14 @@
 # (double-click it in the file manager, or ./install.sh in a terminal). Options: ./install.sh --help
 cd "$(dirname "$(readlink -f "$0")")" || exit 1
 
+# RecompLauncher passes --prepare and reads stdout. No terminal, and no "press Enter" at the end.
+prepare=0
+case " $* " in
+  *" --prepare "*) prepare=1; export FE_NO_PAUSE=1 ;;
+esac
+
 # started from a file manager (no terminal): open one, so the progress and the questions can be seen
-if [ ! -t 0 ] && [ -z "$FE_IN_TERMINAL" ] && { [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; }; then
+if [ "$prepare" = 0 ] && [ ! -t 0 ] && [ -z "$FE_IN_TERMINAL" ] && { [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; }; then
   export FE_IN_TERMINAL=1
   if command -v konsole >/dev/null; then exec konsole -e "$0" "$@"; fi
   if command -v gnome-terminal >/dev/null; then exec gnome-terminal -- "$0" "$@"; fi

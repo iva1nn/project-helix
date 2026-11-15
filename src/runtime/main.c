@@ -42,6 +42,7 @@ static const char *remaster_dir;
 static const char *opt_data;     /* --data DIR / ini data = DIR */
 char fe_data[1024], fe_data_game[1100];
 static int opt_fullscreen = 1, opt_screen_w, opt_screen_h; /* borderless fullscreen by default */
+static int display_in_ini; /* the ini named display=; otherwise RecompLauncher's mode may choose */
 uint32_t *hw_screen_capture(const GpuDisplay *d, int w, int h);
 int hw_init(SDL_Window *window, int scale);
 void hw_present(const GpuDisplay *d, int vx, int vy, int vw, int vh, int win_w, int win_h);
@@ -697,6 +698,21 @@ static void find_data(int from_ini) {
     else LOG("data: no data folder (%s)\n", c[0]);
 }
 
+/* --game PATH: a Disc 1 .cue, or a folder that contains one. A file is used as the disc argument is. */
+static const char *game_path(const char *p) {
+    static char out[1300];
+    struct _finddata_t fd;
+    intptr_t h;
+    char pat[1200];
+    if (!is_dir(p)) return p;
+    snprintf(pat, sizeof pat, "%s/*(Disc 1)*.cue", p);
+    h = _findfirst(pat, &fd);
+    if (h == -1) return p;
+    _findclose(h);
+    snprintf(out, sizeof out, "%s/%s", p, fd.name);
+    return out;
+}
+
 /* no disc given: the first '(Disc 1)' .cue in discs/<game> next to the data folder (F:/fe_port/discs/fe2) */
 static const char *data_disc(void) {
     static char p[1300];
@@ -749,7 +765,7 @@ static void load_settings(void) {
         else if (!strcmp(k, "scale") && v[0]) opt_scale = atoi(v);
         else if (!strcmp(k, "renderer") && v[0]) { static char r[8]; snprintf(r, sizeof r, "%s", v); opt_renderer = r; }
         /* display = fullscreen | windowed ("fullscreen = 0" of the first settings files was only the old default) */
-        else if (!strcmp(k, "display")) opt_fullscreen = strcmp(v, "windowed") != 0;
+        else if (!strcmp(k, "display")) { opt_fullscreen = strcmp(v, "windowed") != 0; display_in_ini = 1; }
         else if (!strcmp(k, "fill")) { extern int hw_fill_mode; hw_fill_mode = atoi(v); }
         else if (!strcmp(k, "models")) models_on = atoi(v);
         else if (!strcmp(k, "smooth")) smooth_on = atoi(v);
@@ -817,7 +833,15 @@ int main(int argc, char **argv) {
     const char *disc = 0, *logp = 0, *memcard = 0;
     int headless_arg = 0;
     for (int i = 1; i < argc; i++) if (!strcmp(argv[i], "--headless")) headless_arg = 1;
-    if (!headless_arg) load_settings(); /* tests stay independent of the user's settings */
+    if (!headless_arg) { /* tests stay independent of the user's settings */
+        load_settings();
+        /* RecompLauncher only. A display line in the ini, or --windowed / --fullscreen below, wins. */
+        if (!display_in_ini) {
+            const char *mode = getenv("RECOMPLAUNCHER_MODE");
+            if (mode && !strcmp(mode, "desktop")) opt_fullscreen = 0;
+            else if (mode && !strcmp(mode, "bigpicture")) opt_fullscreen = 1;
+        }
+    }
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "--headless")) opt_headless = 1;
         else if (!strcmp(argv[i], "--fast")) opt_fast = 1;
@@ -928,6 +952,7 @@ int main(int argc, char **argv) {
                 script[nscript].frame = f; script[nscript].mask = (uint16_t)m; script[nscript].len = len; nscript++;
             }
         }
+        else if (!strcmp(argv[i], "--game") && i + 1 < argc) disc = game_path(argv[++i]);
         else disc = argv[i];
     }
     if (logp) log_file = fopen(logp, "w");

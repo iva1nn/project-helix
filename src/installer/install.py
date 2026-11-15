@@ -3,8 +3,11 @@ the remastered assets, downloads the build tools, recompiles each game from the 
 next to the data folder and creates the shortcuts. Every run is safe to repeat: finished steps are kept.
 
     install.bat [--game fe1|fe2] [--verify] [--rebuild] [--no-shortcuts] [--no-test]
+    install.bat --prepare [--launcher-disc PATH ...] [--launcher-assets DIR ...]
 
     --verify        check every asset file's SHA-256 (slow: ~45 GB read), not just its size
+    --prepare       windowless setup for RecompLauncher: prints "progress 0.4 Text" lines, makes no
+                    shortcuts and asks nothing. Without --prepare the installer is unchanged.
     --rebuild       recompile from scratch (the recompiler's output and every object file)
     --no-shortcuts  do not create Desktop / Start menu shortcuts
     --no-test       skip the short test start of each built game
@@ -43,6 +46,7 @@ SECTOR = 2352
 NEED_FREE_GB = 3.0  # toolchain (~0.9 GB unpacked + 0.2 GB archives), two builds, headroom
 
 _log = None
+preparing = False  # --prepare: progress lines for RecompLauncher, and no questions
 
 
 def say(*a):
@@ -66,6 +70,15 @@ def say(*a):
 def step(title):
     say("")
     say("== " + title)
+    if preparing:
+        for key, frac, text in (("1/5", 0.08, "Checking your discs"),
+                                ("2/5", 0.18, "Checking the remastered assets"),
+                                ("3/5", 0.32, "Getting the build tools"),
+                                ("4/5", 0.45, "Building the game from your discs"),
+                                ("5/5", 0.92, "Finishing")):
+            if title.startswith(key):
+                say("progress %.2f %s" % (frac, text))
+                break
 
 
 class Fail(Exception):
@@ -571,7 +584,74 @@ def is_ours(cue):
         return False
 
 
-def scan_discs():
+def link_dir(src, dst):
+    """a directory junction (Windows) or a symlink, so a pack elsewhere is visible under data\\"""
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if WINDOWS:
+        r = subprocess.run(["cmd", "/c", "mklink", "/J", str(dst), str(src)], capture_output=True, text=True)
+        if r.returncode:
+            raise Fail("could not link the asset pack into data\\ (%s). Extract the pack into this folder instead "
+                       "(README.md)." % ((r.stderr or r.stdout or "mklink failed").strip()))
+    else:
+        os.symlink(src, dst, target_is_directory=True)
+
+
+def adopt_assets(folder):
+    """a pack picked in RecompLauncher, made visible as data\\ without moving the player's files.
+    A pack already inside this folder is left to the installer's own checks."""
+    folder = Path(folder)
+    if not str(folder).strip():
+        return
+    if not folder.is_dir():
+        raise Fail("the asset pack folder is not there: %s. Extract the pack first; the .7z itself is not read."
+                   % folder)
+    folder = folder.resolve()
+    try:
+        folder.relative_to(ROOT.resolve())
+        inside = True
+    except ValueError:
+        inside = False
+    if inside:
+        say("  asset pack is already in this folder:", rel(folder))
+        return
+    root = None
+    candidates = [folder, folder / "data"]
+    if folder.name in ("fe1", "fe2"):
+        candidates.append(folder.parent)
+    for c in candidates:
+        if (c / "manifests").is_dir() or (c / "fe1").is_dir() or (c / "fe2").is_dir():
+            root = c
+            break
+    if root is None:
+        raise Fail("that folder is not an extracted asset pack (it has no fe1, fe2 or manifests folder): %s. "
+                   "Extract the pack first; the .7z itself is not read." % folder)
+    DATA.mkdir(exist_ok=True)
+    linked = []
+    for name in ("fe1", "fe2"):
+        src = root / name
+        if not src.is_dir():
+            continue
+        dst = DATA / name
+        if dst.exists():
+            continue
+        link_dir(src, dst)
+        linked.append(name)
+    man_src = root / "manifests"
+    if man_src.is_dir():
+        man_dst = DATA / "manifests"
+        man_dst.mkdir(exist_ok=True)
+        for f in sorted(man_src.glob("*.json")):
+            dst = man_dst / f.name
+            if not dst.exists():
+                shutil.copy2(f, dst)
+                linked.append("manifests\\" + f.name)
+    if linked:
+        say("  using the asset pack at %s (%s)" % (folder, ", ".join(linked)))
+    else:
+        say("  asset pack already in data\\; nothing was copied from the picked folder")
+
+
+def scan_discs(extra=()):
     """-> {game: {n: (image as given, data-track file)}}, [problems], [notes]"""
     found, problems, notes = {}, [], []
     DISCS.mkdir(exist_ok=True)
@@ -582,6 +662,30 @@ def scan_discs():
                 files.append(p)
         except OSError:
             pass
+    for raw in extra:
+        if not raw or not str(raw).strip():
+            continue
+        p = Path(raw)
+        try:
+            if p.is_dir():
+                files.extend(q for q in p.rglob("*") if q.is_file())
+            elif p.is_file():
+                files.append(p)
+            else:
+                problems.append("%s: not found" % raw)
+        except OSError as e:
+            problems.append("%s: cannot be read (%s)" % (raw, e.strerror or e))
+    seen, unique = set(), []
+    for p in files:
+        try:
+            key = str(p.resolve()).lower() if WINDOWS else str(p.resolve())
+        except OSError:
+            key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(p)
+    files = unique
     cues = [p for p in files if p.suffix.lower() == ".cue" and not is_ours(p)]
     used = set()
     images = []  # (path as the player gave it, the data track's file)
@@ -878,7 +982,7 @@ def take_lock():
 
 
 def main():
-    global _log
+    global _log, preparing
     ap = argparse.ArgumentParser(prog="install.bat" if WINDOWS else "install.sh")
     ap.add_argument("--game", choices=sorted(GAMES))
     ap.add_argument("--verify", action="store_true")
@@ -887,7 +991,18 @@ def main():
     ap.add_argument("--no-test", action="store_true")
     ap.add_argument("--no-steam", action="store_true", help="Linux: do not add the games to the Steam library")
     ap.add_argument("--yes", action="store_true", help="Linux: close Steam without asking when it must be closed")
+    ap.add_argument("--prepare", action="store_true",
+                    help="windowless setup for RecompLauncher (progress lines, no shortcuts, no questions)")
+    ap.add_argument("--launcher-disc", action="append", default=[],
+                    help="a disc image picked in RecompLauncher; repeat for each disc")
+    ap.add_argument("--launcher-assets", action="append", default=[],
+                    help="an extracted asset-pack folder picked in RecompLauncher")
     args = ap.parse_args()
+    preparing = args.prepare
+    if args.prepare:  # the launcher has no keyboard: never ask, and don't make shortcuts
+        args.no_shortcuts = True
+        args.no_steam = True
+        args.yes = True
     try:
         _log = open(LOG, "a", encoding="utf-8")
         _log.write("\n\n######## %s  %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), " ".join(sys.argv[1:])))
@@ -919,8 +1034,12 @@ def main():
 
 
 def run(args):
+    if preparing:
+        say("progress 0.02 Starting setup")
+        for folder in args.launcher_assets:
+            adopt_assets(folder)
     step("1/5 Your disc images (discs\\)")
-    found, problems, notes = scan_discs()
+    found, problems, notes = scan_discs(args.launcher_disc)
     for n in notes:
         say("  note:", n)
     for p in problems:
@@ -980,7 +1099,10 @@ def run(args):
 
     installed, failed = {}, {}
     step("4/5 Building the games from your discs")
-    for game, have in ready.items():
+    n_ready = max(len(ready), 1)
+    for i, (game, have) in enumerate(ready.items()):
+        if preparing:
+            say("progress %.2f Building %s" % (0.45 + 0.40 * i / n_ready, GAMES[game]["title"]))
         cues = write_cues(game, have)
         bld = build(game, cues, args.rebuild, w64, sdl)
         exe = install_game(game, bld, ff)
@@ -1012,6 +1134,8 @@ def run(args):
     else:
         say("Done: %s. Start it from your Steam library (Game Mode: Library > Non-Steam), the app menu or the "
             "desktop launcher." % ", ".join(GAMES[g]["title"] for g in installed))
+    if preparing:
+        say("progress 1.00 Ready to play")
     return 0
 
 
@@ -1073,7 +1197,10 @@ if __name__ == "__main__":
         sys.exit(main())
     except Fail as e:
         say("")
-        say("INSTALL STOPPED: " + str(e))
+        msg = str(e)
+        say("INSTALL STOPPED: " + msg)
+        if preparing:
+            say("progress 0.99 " + " ".join(msg.split()))
         say("(the full log is in install.log)")
         sys.exit(1)
     except KeyboardInterrupt:
