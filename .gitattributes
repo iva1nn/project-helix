@@ -4,3 +4,4 @@
 # and bash needs LF
 *.sh text eol=lf
 *.ttf binary
+*.exe binary
