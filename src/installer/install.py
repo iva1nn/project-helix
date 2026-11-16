@@ -4,6 +4,8 @@ next to the data folder and creates the shortcuts. Every run is safe to repeat: 
 
     install.bat [--game fe1|fe2] [--verify] [--rebuild] [--no-shortcuts] [--no-test]
     install.bat --prepare [--launcher-disc PATH ...] [--launcher-assets DIR ...]
+    --launcher-disc may be a disc image or a folder of images (subfolders are scanned;
+    discs are identified by contents, not names).
 
     --verify        check every asset file's SHA-256 (slow: ~45 GB read), not just its size
     --prepare       windowless setup for RecompLauncher: prints "progress 0.4 Text" lines, makes no
@@ -37,6 +39,7 @@ sys.path.insert(0, str(SRC / "tools" / "recomp"))
 from disc import Disc  # noqa: E402
 
 WINDOWS = os.name == "nt"
+_NOWIN = {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)} if WINDOWS else {}
 GAMES = json.loads((HERE / "games.json").read_text(encoding="utf-8"))
 TOOLS = json.loads((HERE / "toolchain.json").read_text(encoding="utf-8"))["windows" if WINDOWS else "linux"]
 EXE = ".exe" if WINDOWS else ""
@@ -298,7 +301,7 @@ def ensure_tool(name):
         elif kind == "7z-sfx":
             # the official self-extracting 7-Zip archive: -o<dir> -y extracts without asking
             r = subprocess.run([str(arc), "-o" + str(tmp), "-y"], capture_output=True, text=True, errors="replace",
-                               timeout=900)
+                               timeout=900, **_NOWIN)
             if r.returncode:
                 raise OSError((r.stdout + r.stderr).strip()[-300:] or "exit code %d" % r.returncode)
     except (zipfile.BadZipFile, tarfile.TarError, EOFError) as e:
@@ -324,7 +327,7 @@ def check_compiler(cc):
     """cc: w64devkit's folder (Windows) or zig's (Linux)"""
     exe = [str(cc / "bin" / "gcc.exe"), "--version"] if WINDOWS else [str(cc / "zig"), "version"]
     try:
-        r = subprocess.run(exe, capture_output=True, text=True, timeout=120)
+        r = subprocess.run(exe, capture_output=True, text=True, timeout=120, **_NOWIN)
         ok = r.returncode == 0
     except (OSError, subprocess.TimeoutExpired):
         ok = False
@@ -344,6 +347,14 @@ def gather_misplaced_packs():
         first = top.relative_to(ROOT).parts[0]
         if top == DATA or first in (".toolchain", "src", ".git"):
             continue
+        # data\fe1\data is not a pack dumped in the wrong folder: it is the catalogue layout
+        # (or a junction to one). Flattening it would os.replace() across drives (WinError 17).
+        try:
+            under = top.resolve().relative_to(DATA.resolve()).parts
+        except ValueError:
+            under = ()
+        if under and under[0] != "data":
+            continue
         try:
             for p in sorted(top.rglob("*")):
                 if p.is_file():
@@ -351,7 +362,14 @@ def gather_misplaced_packs():
                     dst.parent.mkdir(parents=True, exist_ok=True)
                     if dst.exists():
                         dst.unlink()
-                    os.replace(p, dst)
+                    try:
+                        os.replace(p, dst)
+                    except OSError as e:
+                        # junction / other volume: copy instead of move (do not delete the player's pack)
+                        if getattr(e, "winerror", None) == 17 or getattr(e, "errno", None) == errno.EXDEV:
+                            shutil.copy2(p, dst)
+                        else:
+                            raise
         except OSError as e:
             raise Fail("could not move the asset pack from %s into data\\ (%s). Close programs that use these files "
                        "(Explorer windows, the archive program) and run install.bat again." % (rel(top), e))
@@ -588,7 +606,7 @@ def link_dir(src, dst):
     """a directory junction (Windows) or a symlink, so a pack elsewhere is visible under data\\"""
     dst.parent.mkdir(parents=True, exist_ok=True)
     if WINDOWS:
-        r = subprocess.run(["cmd", "/c", "mklink", "/J", str(dst), str(src)], capture_output=True, text=True)
+        r = subprocess.run(["cmd", "/c", "mklink", "/J", str(dst), str(src)], capture_output=True, text=True, **_NOWIN)
         if r.returncode:
             raise Fail("could not link the asset pack into data\\ (%s). Extract the pack into this folder instead "
                        "(README.md)." % ((r.stderr or r.stdout or "mklink failed").strip()))
@@ -596,35 +614,75 @@ def link_dir(src, dst):
         os.symlink(src, dst, target_is_directory=True)
 
 
-def adopt_assets(folder):
-    """a pack picked in RecompLauncher, made visible as data\\ without moving the player's files.
-    A pack already inside this folder is left to the installer's own checks."""
-    folder = Path(folder)
-    if not str(folder).strip():
-        return
-    if not folder.is_dir():
-        raise Fail("the asset pack folder is not there: %s. Extract the pack first; the .7z itself is not read."
-                   % folder)
-    folder = folder.resolve()
-    try:
-        folder.relative_to(ROOT.resolve())
-        inside = True
-    except ValueError:
-        inside = False
-    if inside:
-        say("  asset pack is already in this folder:", rel(folder))
-        return
-    root = None
-    candidates = [folder, folder / "data"]
-    if folder.name in ("fe1", "fe2"):
-        candidates.append(folder.parent)
-    for c in candidates:
-        if (c / "manifests").is_dir() or (c / "fe1").is_dir() or (c / "fe2").is_dir():
-            root = c
-            break
-    if root is None:
-        raise Fail("that folder is not an extracted asset pack (it has no fe1, fe2 or manifests folder): %s. "
-                   "Extract the pack first; the .7z itself is not read." % folder)
+def seven_zip():
+    """7-Zip, used to unpack remaster pack archives picked in RecompLauncher."""
+    for p in (
+        Path(r"C:\Program Files\7-Zip\7z.exe"),
+        Path(r"C:\Program Files (x86)\7-Zip\7z.exe"),
+    ):
+        if p.is_file():
+            return p
+    w = shutil.which("7z") or shutil.which("7z.exe")
+    return Path(w) if w else None
+
+
+def pack_archives_in(path):
+    """published remaster .7z files in a picked file or folder, matched by name or size."""
+    path = Path(path)
+    files = []
+    if path.is_file():
+        files = [path]
+    elif path.is_dir():
+        try:
+            files = [p for p in path.iterdir() if p.is_file()]
+        except OSError as e:
+            raise Fail("the asset pack folder cannot be read (%s): %s" % (e, path))
+    by_name, by_size = {}, {}
+    for game, pins in PACKS.items():
+        for e in pins:
+            by_name[e["archive"].lower()] = (game, e)
+            by_size[e["archive_size"]] = (game, e)
+    found, seen = [], set()
+    for p in files:
+        name = p.name.lower()
+        if not (name.endswith(".7z") or re.search(r"\.7z\.00\d$", name)):
+            continue
+        try:
+            size = p.stat().st_size
+        except OSError:
+            continue
+        hit = by_name.get(name) or by_size.get(size)
+        if not hit or hit[0] in seen:
+            continue
+        seen.add(hit[0])
+        found.append((hit[0], p, hit[1]))
+    return found
+
+
+def extract_pack_archive(arc, game, frac):
+    """unpack a published pack .7z into this folder (the archive already contains data\\)."""
+    z = seven_zip()
+    if not z:
+        raise Fail("7-Zip is needed to unpack %s. Install 7-Zip from https://www.7-zip.org/ and run setup again, "
+                   "or extract the archive into this folder first." % arc.name)
+    if preparing:
+        say("progress %.2f Unpacking %s" % (frac, GAMES[game]["title"]))
+    say("  unpacking %s ..." % arc.name)
+    r = subprocess.run([str(z), "x", "-y", "-aoa", "-bso0", "-bsp1", "-o" + str(ROOT), str(arc)],
+                       capture_output=True, text=True, errors="replace", timeout=7200, **_NOWIN)
+    if r.returncode:
+        err = (r.stderr or r.stdout or "exit code %d" % r.returncode).strip()[-400:]
+        if "disk" in err.lower() or "space" in err.lower():
+            raise Fail("the disk is full while unpacking %s. Free space and run setup again." % arc.name)
+        raise Fail("%s could not be unpacked (%s)." % (arc.name, err or "7-Zip failed"))
+    if not (DATA / game).is_dir() and not (DATA / "manifests" / (game + ".json")).is_file():
+        raise Fail("%s unpacked but data\\%s is missing. Extract the archive into this folder by hand and run "
+                   "setup again." % (arc.name, game))
+    say("  unpacked", rel(arc))
+
+
+def adopt_extracted_pack(root, folder):
+    """junction/copy an already-extracted pack (data\\fe1, data\\fe2, manifests) into data\\."""
     DATA.mkdir(exist_ok=True)
     linked = []
     for name in ("fe1", "fe2"):
@@ -645,7 +703,6 @@ def adopt_assets(folder):
             if not dst.exists():
                 shutil.copy2(f, dst)
                 linked.append("manifests\\" + f.name)
-    # compiled into the exe; the pack keeps it next to fe1/fe2, not inside them
     build_src = root / "build"
     if build_src.is_dir():
         build_dst = DATA / "build"
@@ -660,6 +717,50 @@ def adopt_assets(folder):
         say("  using the asset pack at %s (%s)" % (folder, ", ".join(linked)))
     else:
         say("  asset pack already in data\\; nothing was copied from the picked folder")
+
+
+def adopt_assets(folder):
+    """a pack picked in RecompLauncher: an extracted data folder, or a folder of published .7z archives."""
+    folder = Path(folder)
+    if not str(folder).strip():
+        return
+    if not folder.exists():
+        raise Fail("the asset pack is not there: %s" % folder)
+    folder = folder.resolve()
+    try:
+        folder.relative_to(ROOT.resolve())
+        inside = True
+    except ValueError:
+        inside = False
+    if inside:
+        say("  asset pack is already in this folder:", rel(folder))
+        return
+    root = None
+    look = [folder]
+    if folder.is_dir():
+        look.extend([folder / "data", folder.parent if folder.name in ("fe1", "fe2") else None])
+    for c in look:
+        if c and c.is_dir() and ((c / "manifests").is_dir() or (c / "fe1").is_dir() or (c / "fe2").is_dir()):
+            root = c
+            break
+    if root is not None:
+        adopt_extracted_pack(root, folder)
+        return
+    archives = pack_archives_in(folder)
+    if not archives:
+        raise Fail("that folder is not a remaster pack: it has no fe1/fe2/manifests folders and no published "
+                   ".7z archives (%s). Put the pack .7z files in it, or extract a pack first." % folder)
+    n = max(len(archives), 1)
+    for i, (game, arc, pin) in enumerate(archives):
+        if (DATA / "manifests" / (game + ".json")).is_file() or (DATA / game).is_dir():
+            say("  %s pack already in data\\; not unpacking %s" % (GAMES[game]["title"], arc.name))
+            continue
+        if arc.stat().st_size != pin["archive_size"]:
+            raise Fail("%s is the wrong size (%.2f GB, published pack is %.2f GB): download it again.%s" % (
+                arc.name, arc.stat().st_size / 2 ** 30, pin["archive_size"] / 2 ** 30, get_it(game)))
+        extract_pack_archive(arc, game, 0.08 + 0.28 * i / n)
+    if not any((DATA / g).is_dir() or (DATA / "manifests" / (g + ".json")).is_file() for g in PACKS):
+        raise Fail("unpacking the pack archives did not produce data\\fe1 or data\\fe2.")
 
 
 def scan_discs(extra=()):
@@ -757,6 +858,15 @@ def stray_images():
     return out
 
 
+def file_for_cue(path, cue_dir):
+    """FILE line: relative when the image is on the same drive as the .cue, else absolute (junction / other volume)."""
+    path = Path(path).resolve()
+    try:
+        return os.path.relpath(path, cue_dir)
+    except ValueError:
+        return str(path)
+
+
 def write_cues(game, images):
     """discs/<game>/<Title> (Disc N).cue for each disc, pointing at the player's own files (relative paths): the
     game finds discs 2-4 by that name. The player's own files are never changed."""
@@ -776,10 +886,9 @@ def write_cues(game, images):
             bins = iter(cue_files(given))
             # every FILE line rewritten with the found file, quoted, relative to the new .cue (the game reads the
             # first FILE "..." line and joins it to the .cue's folder)
-            text = CUE_FILE.sub(lambda m: 'FILE "%s"' % os.path.relpath(next(bins).resolve(), out), text)
+            text = CUE_FILE.sub(lambda m: 'FILE "%s"' % file_for_cue(next(bins), out), text)
         else:
-            text = 'FILE "%s" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n' % os.path.relpath(
-                image.resolve(), out)
+            text = 'FILE "%s" BINARY\n  TRACK 01 MODE2/2352\n    INDEX 01 00:00:00\n' % file_for_cue(image, out)
         dst.write_text(MARK + rel(given) + "\n" + text, encoding="utf-8")
         cues[n] = dst
     return cues
@@ -856,7 +965,7 @@ def build(game, cues, rebuild, w64, sdl):
     t0 = time.time()
     try:
         p = subprocess.Popen(cmd, cwd=str(SRC), env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                             errors="replace")
+                             errors="replace", **_NOWIN)
     except OSError as e:
         raise Fail("the build could not start (%s)" % e)
     tail = []
@@ -921,7 +1030,7 @@ def test_start(game, exe, cue1):
     try:
         r = subprocess.run([str(exe), str(cue1), "--headless", "--fast", "--frames", "1200", "--mute",
                             "--log", str(logf)] + ([] if WINDOWS else ["--renderer", "sw"]), cwd=str(exe.parent),
-                           capture_output=True, text=True, timeout=300, errors="replace")
+                           capture_output=True, text=True, timeout=300, errors="replace", **_NOWIN)
     except subprocess.TimeoutExpired:
         return "the test start did not finish in 5 minutes"
     except OSError as e:
@@ -965,7 +1074,7 @@ foreach ($d in $dirs) {
     env = dict(os.environ, FE_EXE=str(exe), FE_CUE=str(cue1), FE_NAME=g["shortcut"], FE_MENU="Fear Effect (native port)")
     try:
         r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps], env=env,
-                           capture_output=True, text=True, errors="replace", timeout=120)
+                           capture_output=True, text=True, errors="replace", timeout=120, **_NOWIN)
         made = [x.strip() for x in r.stdout.split("\n") if x.strip()]
         err = (r.stderr or "").strip() if r.returncode else ""
     except (OSError, subprocess.TimeoutExpired) as e:
@@ -1005,9 +1114,10 @@ def main():
     ap.add_argument("--prepare", action="store_true",
                     help="windowless setup for RecompLauncher (progress lines, no shortcuts, no questions)")
     ap.add_argument("--launcher-disc", action="append", default=[],
-                    help="a disc image picked in RecompLauncher; repeat for each disc")
+                    help="a disc image or a folder of discs from RecompLauncher; folders are scanned "
+                         "recursively and discs are identified by contents, not names")
     ap.add_argument("--launcher-assets", action="append", default=[],
-                    help="an extracted asset-pack folder picked in RecompLauncher")
+                    help="extracted pack folder or folder of published .7z archives from RecompLauncher")
     args = ap.parse_args()
     preparing = args.prepare
     if args.prepare:  # the launcher has no keyboard: never ask, and don't make shortcuts

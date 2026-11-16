@@ -5,73 +5,9 @@
   "repo": "iva1nn/project-helix",
   "inputs": [
     {
-      "id": "fe1d1",
+      "id": "discs",
       "role": "disc",
-      "label": "Fear Effect, disc 1 of 4, USA, serial SLUS-00920. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe1d2",
-      "role": "disc",
-      "label": "Fear Effect, disc 2 of 4, USA, serial SLUS-01056. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe1d3",
-      "role": "disc",
-      "label": "Fear Effect, disc 3 of 4, USA, serial SLUS-01057. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe1d4",
-      "role": "disc",
-      "label": "Fear Effect, disc 4 of 4, USA, serial SLUS-01058. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe1assets",
-      "role": "dlc",
-      "label": "The extracted Fear Effect remaster pack. Pick the folder that contains fe1 and manifests (in the downloaded archive, that is the data folder). Extract the .7z first. If the pack is already inside this install, pick that data folder.",
+      "label": "Folder with your Fear Effect and/or Fear Effect 2 discs (USA). Subfolders are fine, and names do not matter: the installer reads which disc is which. Pick that folder once.",
       "formats": [
         {
           "type": "folder"
@@ -79,73 +15,9 @@
       ]
     },
     {
-      "id": "fe2d1",
-      "role": "disc",
-      "label": "Fear Effect 2: Retro Helix, disc 1 of 4, USA v1.1, serial SLUS-01266. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe2d2",
-      "role": "disc",
-      "label": "Fear Effect 2: Retro Helix, disc 2 of 4, USA v1.1, serial SLUS-01275. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe2d3",
-      "role": "disc",
-      "label": "Fear Effect 2: Retro Helix, disc 3 of 4, USA v1.1, serial SLUS-01276. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe2d4",
-      "role": "disc",
-      "label": "Fear Effect 2: Retro Helix, disc 4 of 4, USA v1.1, serial SLUS-01277. Pick the .cue, or the raw .bin or .img (2352-byte sectors). A 2048-byte .iso has no CD audio and is refused.",
-      "formats": [
-        {
-          "type": "file",
-          "extensions": [
-            "cue",
-            "bin",
-            "img",
-            "iso"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "fe2assets",
+      "id": "assets",
       "role": "dlc",
-      "label": "The extracted Fear Effect 2 remaster pack. Pick the folder that contains fe2 and manifests (in the downloaded archive, that is the data folder). Extract the .7z first. If the pack is already inside this install, pick that data folder.",
+      "label": "Folder with the remaster pack archives (.7z) and/or the extracted packs. One folder can hold both games. The .7z files are unpacked during setup; you do not pick each disc or each archive by hand.",
       "formats": [
         {
           "type": "folder"
@@ -161,13 +33,6 @@
         "--game",
         "fe1"
       ],
-      "inputs": [
-        "fe1d1",
-        "fe1d2",
-        "fe1d3",
-        "fe1d4",
-        "fe1assets"
-      ],
       "saves": [
         "{install}/Fear Effect/memcards",
         "{install}/Fear Effect/states",
@@ -180,13 +45,6 @@
       "args": [
         "--game",
         "fe2"
-      ],
-      "inputs": [
-        "fe2d1",
-        "fe2d2",
-        "fe2d3",
-        "fe2d4",
-        "fe2assets"
       ],
       "saves": [
         "{install}/Fear Effect 2/memcards",
@@ -211,20 +69,12 @@
       "--no-shortcuts",
       "--no-steam",
       "--yes",
-      "--launcher-disc={input:fe1d1}",
-      "--launcher-disc={input:fe1d2}",
-      "--launcher-disc={input:fe1d3}",
-      "--launcher-disc={input:fe1d4}",
-      "--launcher-disc={input:fe2d1}",
-      "--launcher-disc={input:fe2d2}",
-      "--launcher-disc={input:fe2d3}",
-      "--launcher-disc={input:fe2d4}",
-      "--launcher-assets={input:fe1assets}",
-      "--launcher-assets={input:fe2assets}"
+      "--launcher-disc={input:discs}",
+      "--launcher-assets={input:assets}"
     ],
     "label": "Building the game from your discs",
-    "timeout": 3600,
-    "version": "1"
+    "timeout": 10800,
+    "version": "3"
   },
   "config": [
     {
