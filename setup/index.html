@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fear Effect — Setup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Oswald:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <p class="kicker">Unofficial fan restoration · PlayStation</p>
+      <h1>FEAR <span>EFFECT</span> · NATIVE PC PORT</h1>
+      <p class="sub">Setup</p>
+    </div>
+    <div class="meta">
+      <span id="version">version —</span>
+      <span id="os_badge" class="badge">—</span>
+    </div>
+  </header>
+
+  <main>
+    <p class="lead" id="lead">Builds Fear Effect and/or Fear Effect 2 from your own BIN/CUE (USA, all four discs per game you install) and the remaster pack. A 2048-byte .iso will not work. Skip a row only if you are not installing that game.</p>
+    <p class="warn">The folder this setup builds contains the game. It is for your own use only; do not share or upload it.</p>
+
+    <div class="form">
+      <div class="row" id="row_game">
+        <label for="game_folder">Game folder</label>
+        <input id="game_folder" class="path" type="text" spellcheck="false" placeholder="Recomp library\FearEffect">
+        <button type="button" data-browse="game">Browse…</button>
+      </div>
+      <div class="row">
+        <label for="assets">Asset pack <a href="https://feremaster.us/downloads" id="assets_link">download</a></label>
+        <input id="assets" class="path" type="text" spellcheck="false" placeholder="Folder with the .7z, or an extracted pack">
+        <button type="button" data-browse="assets">Browse…</button>
+      </div>
+      <div class="row">
+        <label for="discs_fe1">Fear Effect discs <small id="discs_fe1_note"></small></label>
+        <input id="discs_fe1" class="path" type="text" spellcheck="false" placeholder="BIN/CUE folder, all 4 discs">
+        <button type="button" data-browse="discs_fe1">Browse…</button>
+      </div>
+      <div class="row">
+        <label for="discs_fe2">Fear Effect 2 discs <small id="discs_fe2_note"></small></label>
+        <input id="discs_fe2" class="path" type="text" spellcheck="false" placeholder="BIN/CUE folder, all 4 discs">
+        <button type="button" data-browse="discs_fe2">Browse…</button>
+      </div>
+    </div>
+
+    <div class="progress-wrap" id="progress_wrap" hidden>
+      <div class="progress" id="progress_track" hidden><i id="progress_bar"></i></div>
+      <p id="status" class="status"></p>
+    </div>
+  </main>
+
+  <aside id="logbox" hidden>
+    <pre id="log"></pre>
+  </aside>
+
+  <footer>
+    <button type="button" class="ghost" id="quit">Quit</button>
+    <button type="button" class="ghost" id="toggle_log">Log</button>
+    <span class="spacer"></span>
+    <button type="button" class="install" id="install">Install</button>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -17,8 +17,9 @@ Curious how the characters stay steady without the PlayStation wobble? See **[Ho
 > This repository contains **no game code and no game data**. The installer builds the game on your PC from
 > **your own discs**. The remastered assets are a separate download.
 
-RecompLauncher can do that setup for you: it asks for your four discs and the asset pack, builds the game
-and puts the picture settings on the game's page. `install.bat` and `install.sh` work as before.
+RecompLauncher can do that setup for you. After Install, run **FearEffect-Setup.exe** (Windows) or `setup.sh`
+(Steam Deck): pick one folder of discs and the remaster pack. The launcher's own setup screen can ask for the
+same two folders. `install.bat` and `install.sh` still work if you prefer to copy files by hand.
 
 ---
 
@@ -34,7 +35,11 @@ and puts the picture settings on the game's page. `install.bat` and `install.sh`
 
 ## Install
 
-**1. Download this repository.** Use *Code → Download ZIP* and extract it, or `git clone` it. Use a short path
+**Windows, with the setup window:** extract this repository, then double-click `FearEffect-Setup.exe`
+(or `setup.bat`). Pick the remaster pack and the folder that holds your BIN/CUE images (Fear Effect and/or
+Fear Effect 2; names do not matter). Skip a disc row only if you are not installing that game.
+
+**Or by hand:** download this repository (*Code → Download ZIP*, or `git clone`). Use a short path
 with plain letters, such as `C:\Games\FearEffect`.
 
 **2. Add your discs and the asset pack** so the folder looks like this:
@@ -125,10 +130,7 @@ Desktop Mode.
 
 ## Asset packs
 
-| Game | Download | Size | SHA-256 |
-|---|---|---:|---|
-| Fear Effect | [`fe1-assets-2026-11-13-f3c5ece.7z`](https://drive.google.com/file/d/1k_6z9l4Rae3eXTpGvgdYS8Tf48yebKoV/view?usp=sharing) | 15.2 GB | `BB56C00A78BC83F135424E9DD62437E93B94F784C36155CC6164A8C01DCF0E01` |
-| Fear Effect 2: Retro Helix | [`fe2-assets-2026-11-13-f3c5ece.7z`](https://drive.google.com/file/d/1zA3IIyikUYEVd7MYbpphT8mURIhHn021/view?usp=sharing) | 22.6 GB | `644C98DC35F86AB8CBC75B703B1E1211BFAFA808618E6F21E4BE62BFE4D441FB` |
+<!-- packs -->
 
 Google Drive warns that it can't scan files this large for viruses: choose **Download anyway**.
 

@@ -25,7 +25,8 @@ jobs:
           mkdir stage
           git archive HEAD | tar -x -C stage
           find stage -name '*.bat' -delete
-          chmod +x stage/install.sh stage/play.sh
+          rm -f stage/FearEffect-Setup.exe
+          chmod +x stage/install.sh stage/play.sh stage/setup.sh
           tar -C stage -czf "FearEffect-${tag}-Linux-x64.tar.gz" .
           rm -rf stage
 

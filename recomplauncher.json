@@ -3,6 +3,17 @@
   "format": 1,
   "name": "Fear Effect",
   "repo": "iva1nn/project-helix",
+  "requires": [
+    "start",
+    "setup",
+    "files.folder",
+    "exit_codes",
+    "settings.ini",
+    "settings.choices",
+    "settings.slider",
+    "settings.groups"
+  ],
+  "min": "0.90.0-beta.36",
   "inputs": [
     {
       "id": "discs",

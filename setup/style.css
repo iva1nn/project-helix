@@ -1,0 +1,206 @@
+:root {
+  --bg: #07151d;
+  --panel: #0a1b24;
+  --cyan: #5ee4ef;
+  --magenta: #ff4d8d;
+  --red: #e10600;
+  --amber: #ffb020;
+  --text: #d7eef2;
+  --muted: #7a9aa8;
+  --line: rgba(94, 228, 239, 0.35);
+  --field: #041016;
+  --btn: #132833;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.35 "Barlow", "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding: 8px 14px 6px;
+  background: #051018;
+  border-bottom: 2px solid var(--red);
+}
+.kicker {
+  margin: 0 0 2px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+h1 {
+  margin: 0;
+  font: 600 20px/1.05 "Oswald", "Segoe UI", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+h1 span { color: var(--magenta); }
+.sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+  padding-bottom: 2px;
+}
+.badge {
+  border: 1px solid var(--line);
+  padding: 2px 7px;
+  color: var(--cyan);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+main { padding: 8px 14px 0; flex: 1 1 auto; min-height: 0; }
+.lead {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.warn {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--magenta);
+  color: var(--text);
+  font-size: 12px;
+}
+.form { display: grid; gap: 6px; }
+body.in-tree #row_game { display: none; }
+.row {
+  display: grid;
+  grid-template-columns: 158px minmax(0, 1fr) 92px;
+  gap: 8px;
+  align-items: center;
+}
+label {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.2;
+}
+label small {
+  color: var(--cyan);
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+label a, #assets_link {
+  color: var(--cyan);
+  font-size: 11px;
+  margin-left: 4px;
+}
+input.path {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  color: var(--text);
+  font: 12.5px/28px "Segoe UI", "Barlow", sans-serif;
+  outline: none;
+}
+input.path:focus { border-color: var(--cyan); }
+input.path::placeholder { color: #4d6a76; }
+button {
+  appearance: none;
+  height: 28px;
+  border: 1px solid var(--line);
+  background: var(--btn);
+  color: var(--text);
+  font: 600 12.5px/1 "Barlow", "Segoe UI", sans-serif;
+  padding: 0 10px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--cyan); color: var(--cyan); }
+button:disabled { opacity: 0.45; cursor: default; }
+.progress-wrap { margin: 8px 0 0; }
+.progress {
+  height: 8px;
+  background: #041016;
+  border: 1px solid var(--line);
+}
+.progress i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--cyan-dim, #2aa8b4), var(--cyan));
+  box-shadow: 0 0 8px rgba(94, 228, 239, 0.45);
+  transition: width 0.25s ease;
+}
+body.error .progress i { background: var(--red); box-shadow: none; }
+body.ok .progress i { background: var(--cyan); }
+.status {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status.err { color: #ff8a8a; }
+.status.ok { color: var(--cyan); }
+.status.busy { color: var(--magenta); }
+footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 10px;
+  position: relative;
+  z-index: 5;
+  flex: 0 0 auto;
+  background: var(--bg);
+}
+.spacer { flex: 1; }
+.ghost { background: transparent; }
+.install {
+  height: 32px;
+  min-width: 108px;
+  background: var(--cyan);
+  color: #041016;
+  border-color: var(--cyan);
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.install:hover { filter: brightness(1.08); color: #041016; }
+body.busy .install, .install:disabled { opacity: 0.45; pointer-events: none; filter: none; }
+#logbox {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 50px;
+  border-top: 1px solid var(--line);
+  background: #03090d;
+  max-height: 110px;
+  z-index: 2;
+}
+#log {
+  margin: 0;
+  max-height: 110px;
+  overflow: auto;
+  padding: 8px 12px;
+  color: #9fd0d8;
+  font: 11px/1.35 ui-monospace, Consolas, monospace;
+  white-space: pre-wrap;
+}
+body.busy .row input, body.busy .row button { pointer-events: none; opacity: 0.7; }
