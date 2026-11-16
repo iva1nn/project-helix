@@ -3,6 +3,8 @@ rem Fear Effect native port: the installer. Double-click it after putting your d
 rem extracting the asset pack(s) into this folder. It gets Python (embeddable, from python.org) once, then runs
 rem src\installer\install.py, which does the rest (README.md). Options: install.bat --help
 setlocal EnableExtensions DisableDelayedExpansion
+rem RecompLauncher passes --prepare and reads this window's text; don't wait for a key
+echo %*| findstr /i /c:"--prepare" >nul && set "FE_NO_PAUSE=1"
 title Fear Effect native port - installer
 set "HERE=%~dp0"
 set "PYVER=3.11.9"

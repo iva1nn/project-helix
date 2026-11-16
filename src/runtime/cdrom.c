@@ -47,10 +47,13 @@ int cdrom_open_image(const char *cue) {
         }
         fclose(f);
         if (!name[0]) return 0;
+        /* FILE "F:\\...\\disc.bin" (other drive / junction): open it as-is. Relative names still join to the .cue. */
+        int abs = (name[0] && name[1] == ':') || name[0] == '/' || name[0] == '\\';
         const char *slash = strrchr(cue, '/');
         const char *bs = strrchr(cue, '\\');
         if (bs > slash) slash = bs;
-        if (slash) snprintf(path, sizeof path, "%.*s/%s", (int)(slash - cue), cue, name);
+        if (abs) snprintf(path, sizeof path, "%s", name);
+        else if (slash) snprintf(path, sizeof path, "%.*s/%s", (int)(slash - cue), cue, name);
         else snprintf(path, sizeof path, "%s", name);
     }
     bin = fopen(path, "rb");
