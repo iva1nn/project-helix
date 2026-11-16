@@ -133,11 +133,15 @@ fixes off / on (`model_fix`), `Ctrl+F6` the scene actors' next look (`scene_look
 ## Command line
 
 `fe2port.exe [<Disc 1 .cue>] [options]` (same for `fe1port.exe`). Any argument that is not an option is the disc.
+`--game PATH` is that disc too: a `.cue`, or a folder containing the Disc 1 `.cue`. RecompLauncher sets
+`RECOMPLAUNCHER_MODE`. When the ini has no `display` line, `desktop` starts in a window and `bigpicture`
+starts fullscreen. `--windowed`, `--fullscreen` and a `display` line win.
 
 **Play options**
 
 | Option | Meaning |
 |---|---|
+| `--game PATH` | Disc 1 `.cue`, or a folder that contains it (ini `disc`). Same as passing the `.cue` itself. |
 | `--scale N` | Internal resolution 1-8 (ini `scale`). |
 | `--renderer hw\|sw` | Renderer (ini `renderer`). Default hw in a window, sw headless. |
 | `--windowed` / `--fullscreen` | Window or borderless fullscreen (ini `display`). |
