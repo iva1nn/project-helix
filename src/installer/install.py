@@ -681,6 +681,72 @@ def extract_pack_archive(arc, game, frac):
     say("  unpacked", rel(arc))
 
 
+def looks_like_pack_tree(folder):
+    """The remaster pack's data tree: manifests JSON and/or fe1/fe2 with models/movies."""
+    if not folder or not Path(folder).is_dir():
+        return False
+    folder = Path(folder)
+    man = folder / "manifests"
+    if man.is_dir() and any(man.glob("*.json")):
+        return True
+    for g in ("fe1", "fe2"):
+        gdir = folder / g
+        if gdir.is_dir() and any((gdir / name).is_dir() for name in ("models", "movies", "textures", "coll", "icons")):
+            return True
+    return False
+
+
+def pack_data_roots(folder):
+    """Extracted pack trees under a picked folder (a single pack, or a catalogue with fe1\\data and fe2\\data)."""
+    folder = Path(folder)
+    found, seen = [], set()
+
+    def add(p):
+        try:
+            key = str(p.resolve()).lower() if WINDOWS else str(p.resolve())
+        except OSError:
+            key = str(p)
+        if key in seen:
+            return
+        seen.add(key)
+        found.append(p)
+
+    catalogue = False
+    for g in ("fe1", "fe2"):
+        for c in (folder / g / "data", folder / g):
+            if looks_like_pack_tree(c):
+                add(c)
+                catalogue = True
+                break
+    if catalogue:
+        return found
+    for c in (folder, folder / "data"):
+        if looks_like_pack_tree(c):
+            add(c)
+            return found
+    return found
+
+
+def looks_like_disc_folder(folder):
+    """BIN/CUE images, not a remaster pack. Used so Easy Setup cannot treat discs as the asset pack."""
+    folder = Path(folder)
+    if not folder.is_dir():
+        return False
+    n = 0
+    try:
+        for p in folder.rglob("*"):
+            try:
+                if p.is_file() and p.suffix.lower() in (".cue", ".bin", ".img", ".iso"):
+                    n += 1
+                    if n >= 2:
+                        return True
+            except OSError:
+                continue
+    except OSError:
+        return False
+    return False
+
+
 def adopt_extracted_pack(root, folder):
     """junction/copy an already-extracted pack (data\\fe1, data\\fe2, manifests) into data\\."""
     DATA.mkdir(exist_ok=True)
@@ -735,21 +801,19 @@ def adopt_assets(folder):
     if inside:
         say("  asset pack is already in this folder:", rel(folder))
         return
-    root = None
-    look = [folder]
-    if folder.is_dir():
-        look.extend([folder / "data", folder.parent if folder.name in ("fe1", "fe2") else None])
-    for c in look:
-        if c and c.is_dir() and ((c / "manifests").is_dir() or (c / "fe1").is_dir() or (c / "fe2").is_dir()):
-            root = c
-            break
-    if root is not None:
-        adopt_extracted_pack(root, folder)
-        return
     archives = pack_archives_in(folder)
-    if not archives:
+    roots = pack_data_roots(folder)
+    if not roots and not archives:
+        if looks_like_disc_folder(folder):
+            raise Fail("that folder holds disc images, not the remaster pack. Pick your BIN/CUE folder as the discs, "
+                       "and pick the folder with the remaster .7z files (or an extracted pack) as the asset pack. "
+                       "(%s)" % folder)
         raise Fail("that folder is not a remaster pack: it has no fe1/fe2/manifests folders and no published "
                    ".7z archives (%s). Put the pack .7z files in it, or extract a pack first." % folder)
+    if roots:
+        for root in roots:
+            adopt_extracted_pack(root, folder)
+        return
     n = max(len(archives), 1)
     for i, (game, arc, pin) in enumerate(archives):
         if (DATA / "manifests" / (game + ".json")).is_file() or (DATA / game).is_dir():
