@@ -18,7 +18,7 @@
     {
       "id": "discs",
       "role": "disc",
-      "label": "Folder with your Fear Effect and/or Fear Effect 2 discs (USA). Subfolders are fine, and names do not matter: the installer reads which disc is which. Pick that folder once.",
+      "label": "Your USA BIN/CUE disc images (Fear Effect and/or Fear Effect 2). One folder is enough; subfolders are fine. Not the remaster .7z pack.",
       "formats": [
         {
           "type": "folder"
@@ -28,7 +28,7 @@
     {
       "id": "assets",
       "role": "dlc",
-      "label": "Folder with the remaster pack archives (.7z) and/or the extracted packs. One folder can hold both games. The .7z files are unpacked during setup; you do not pick each disc or each archive by hand.",
+      "label": "The remaster pack: the folder with the published .7z files, or an already extracted pack. Not your disc images.",
       "formats": [
         {
           "type": "folder"
@@ -85,7 +85,7 @@
     ],
     "label": "Building the game from your discs",
     "timeout": 10800,
-    "version": "3"
+    "version": "4"
   },
   "config": [
     {
