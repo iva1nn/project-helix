@@ -86,7 +86,7 @@ async function refresh() {
     if (s.game_folder) setPath("game_folder", s.game_folder);
     const lead = $("lead");
     if (lead && !state.busy) {
-      lead.textContent = "This folder is the port. Pick the remaster pack and your disc folders, then Install.";
+      lead.textContent = "This folder is the port. Pick the remaster pack (feremaster.us/downloads) and your discs, then Install.";
     }
   }
   if (!state.game_folder && s.game_folder) setPath("game_folder", s.game_folder);

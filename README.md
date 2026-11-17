@@ -17,7 +17,8 @@ Curious how the characters stay steady without the PlayStation wobble? See **[Ho
 > This repository contains **no game code and no game data**. The installer builds the game on your PC from
 > **your own discs**. The remastered assets are a separate download.
 
-RecompLauncher can do that setup for you. After Install, run **FearEffect-Setup.exe** (Windows) or `setup.sh`
+RecompLauncher can do that setup for you. Download the asset pack for each game
+[here](https://feremaster.us/downloads). After Install, run **FearEffect-Setup.exe** (Windows) or `setup.sh`
 (Steam Deck): pick one folder of discs and the remaster pack. The launcher's own setup screen can ask for the
 same two folders. `install.bat` and `install.sh` still work if you prefer to copy files by hand.
 
@@ -28,7 +29,8 @@ same two folders. `install.bat` and `install.sh` still work if you prefer to cop
 - **Windows 10 or 11** (64-bit) and a graphics card with OpenGL 3.3, **or a Steam Deck** (SteamOS 3; see
   [Steam Deck / SteamOS](#steam-deck--steamos))
 - **Your own disc images:** all four discs of the game, USA version (see [Supported discs](#supported-discs))
-- **The asset pack** for your game (see [Asset packs](#asset-packs))
+- **The asset pack** for your game, from [feremaster.us/downloads](https://feremaster.us/downloads)
+  (see [Asset packs](#asset-packs))
 - **Free disk space:** about 21 GB for Fear Effect, 33 GB for Fear Effect 2, plus room for the archive while you
   extract it
 - **Internet once,** for the installer to download its build tools (about 200 MB)
@@ -56,9 +58,9 @@ C:\Games\FearEffect\
 ```
 
 - **Discs:** file names don't matter, because the installer recognises each disc by its content.
-- **Asset pack:** extract the archive, for example with [7-Zip](https://www.7-zip.org/), into the
-  `C:\Games\FearEffect` folder itself. The archive already contains the `data` folder. You can delete the archive
-  afterwards.
+- **Asset pack:** download from [feremaster.us/downloads](https://feremaster.us/downloads), then extract the
+  archive (for example with [7-Zip](https://www.7-zip.org/)) into the `C:\Games\FearEffect` folder itself. The
+  archive already contains the `data` folder. You can delete the archive afterwards.
 
 **3. Double-click `install.bat`.** It checks your discs and the assets, downloads the build tools, builds the game
 from your discs, tests it and creates shortcuts. The first run takes a few minutes.
@@ -130,7 +132,13 @@ Desktop Mode.
 
 ## Asset packs
 
-<!-- packs -->
+Download the pack for each game from **[feremaster.us/downloads](https://feremaster.us/downloads)**. Direct Google
+Drive links:
+
+| Game | Download | Size | SHA-256 |
+|---|---|---:|---|
+| Fear Effect | [`fe1-assets-2026-11-13-f3c5ece.7z`](https://drive.google.com/file/d/1k_6z9l4Rae3eXTpGvgdYS8Tf48yebKoV/view?usp=sharing) | 15.2 GB | `BB56C00A78BC83F135424E9DD62437E93B94F784C36155CC6164A8C01DCF0E01` |
+| Fear Effect 2: Retro Helix | [`fe2-assets-2026-11-13-f3c5ece.7z`](https://drive.google.com/file/d/1zA3IIyikUYEVd7MYbpphT8mURIhHn021/view?usp=sharing) | 22.6 GB | `644C98DC35F86AB8CBC75B703B1E1211BFAFA808618E6F21E4BE62BFE4D441FB` |
 
 Google Drive warns that it can't scan files this large for viruses: choose **Download anyway**.
 
@@ -186,7 +194,7 @@ again. Finished steps are kept, and an interrupted download continues where it s
 | the asset pack is incomplete | Extract the whole archive again and let it overwrite. |
 | older than this installer needs | Your asset pack is out of date: follow [Updating](#updating), step 2. |
 | newer than this copy of the repository | Your repository is out of date: follow [Updating](#updating), step 1. |
-| differs from the published pack / not the published file | Download the pack again from its link under [Asset packs](#asset-packs). |
+| differs from the published pack / not the published file | Download the pack again from [feremaster.us/downloads](https://feremaster.us/downloads). |
 | an antivirus is blocking something | Allow this folder in your antivirus, then run it again. |
 | the game is probably running | Close the game, then run it again. |
 
