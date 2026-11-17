@@ -126,6 +126,8 @@ Desktop Mode.
 | Fear Effect 2: Retro Helix | USA **v1.1** | SLUS-01266, SLUS-01275, SLUS-01276, SLUS-01277 |
 
 - **Works:** BIN/CUE, or raw `.bin` / `.img` files (2352-byte sectors), as made by redump-style dumping tools.
+- **Checked before the game is built:** each data track's size and CRC32 must match the Redump image of that
+  disc (Fear Effect USA, and Fear Effect 2 USA v1.1). A short, damaged or different dump is refused.
 - **Doesn't work:** a 2048-byte `.iso`, because it lacks the audio and movie data. Convert `.chd`, `.pbp` and
   `.ecm` images to BIN/CUE first.
 - **Not supported:** other regions and Fear Effect 2 v1.0. The installer tells you if it finds one.
@@ -190,7 +192,7 @@ again. Finished steps are kept, and an interrupted download continues where it s
 | The installer says | What to do |
 |---|---|
 | a download failed / no internet | Check the connection and run it again. On a PC without internet: download the listed files on another PC, put them into `.toolchain\downloads\`, then run it again. |
-| the image is incomplete / a different version | Copy or dump the disc again. Only the [supported versions](#supported-discs) work. |
+| the image is incomplete / a different version / not the known-good dump | Copy or dump the disc again. Only the [supported versions](#supported-discs) work, and the data track has to match that Redump image. |
 | the asset pack is incomplete | Extract the whole archive again and let it overwrite. |
 | older than this installer needs | Your asset pack is out of date: follow [Updating](#updating), step 2. |
 | newer than this copy of the repository | Your repository is out of date: follow [Updating](#updating), step 1. |
