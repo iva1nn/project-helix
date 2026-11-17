@@ -4,8 +4,8 @@ JSON for the RecompLauncher hub (PC recomps → Achievements). Upload these file
 
 | File | Game | Catalog id |
 |---|---|---|
-| `fe1.json` | Fear Effect | `project-helix--fe1` |
-| `fe2.json` | Fear Effect 2: Retro Helix | `project-helix--fe2` |
+| `fe1.json` | Fear Effect | `project-helix` |
+| `fe2.json` | Fear Effect 2: Retro Helix | `project-helix` |
 
 Titles, descriptions and types follow the public RetroAchievements sets (Fear Effect [11380](https://retroachievements.org/game/11380) by AntonioFNN, Fear Effect 2 [11381](https://retroachievements.org/game/11381) by lagoooona). Points are remapped to Recomp's 5 / 10 / 25 / 50 scale.
 
