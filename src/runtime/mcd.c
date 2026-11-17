@@ -145,7 +145,7 @@ static int file_offset(int first, uint32_t pos) {
 
 /* ------------------------------------------------------------------ BIOS file interface */
 
-typedef struct { int used, first; uint32_t pos, size; int mode; } Fd;
+typedef struct { int used, first; uint32_t pos, size, read; int mode; } Fd;
 static Fd fds[16];
 int mcd_errno;
 
@@ -162,7 +162,7 @@ int mcd_open(const char *path, uint32_t mode) {
     if (b < 0) { mcd_errno = 2; return -1; } /* ENOENT */
     for (int i = 2; i < 16; i++)
         if (!fds[i].used) {
-            fds[i] = (Fd){1, b, 0, file_size(b), (int)mode};
+            fds[i] = (Fd){1, b, 0, file_size(b), 0, (int)mode};
             mcd_errno = 0;
             return i;
         }
@@ -185,6 +185,7 @@ int mcd_rw(int fd, uint32_t buf, uint32_t len, int write) {
         f->pos++; done++;
     }
     if (write) save_card();
+    else f->read += done;
     return (int)done;
 }
 
@@ -197,7 +198,12 @@ int mcd_lseek(int fd, int32_t off, int whence) {
     return (int)f->pos;
 }
 
-void mcd_close(int fd) { if (mcd_is_fd(fd)) fds[fd].used = 0; }
+void mcd_close(int fd) {
+    if (!mcd_is_fd(fd)) return;
+    /* A real save load reads a whole file into RAM; directory listing does not use this path. */
+    if (fds[fd].read >= 256) ach_memcard_loaded();
+    fds[fd].used = 0;
+}
 
 /* firstfile/nextfile: fills a 40-byte DIRENTRY in PS1 RAM */
 static char find_pat[32];

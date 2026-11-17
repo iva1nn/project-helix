@@ -45,6 +45,12 @@ void cheats_enable(const char *part) {
     for (int i = 0; i < ncodes; i++)
         if (strstr(codes[i].name, part)) { codes[i].on = 1; found++; LOG("cheats: on: %s\n", codes[i].name); }
     if (!found) LOG("cheats: no code matches \"%s\"\n", part);
+    if (found) ach_cheats_used();
+}
+
+int cheats_any_on(void) {
+    for (int i = 0; i < ncodes; i++) if (codes[i].on) return 1;
+    return 0;
 }
 
 static void run_code(const Code *c) {

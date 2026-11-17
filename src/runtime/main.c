@@ -425,6 +425,7 @@ static void present_window(void) {
 int frontend_vblank(void) {
     state_vblank(); /* a load requested at the last vblank (leaves through a longjmp) */
     menu_cheats_vblank();
+    ach_frame();
     if (opt_headless) {
         /* the in-game menu (headless only in menu tests): the game stands still while the test keys drive it */
         for (int guard = 0; menu_paused() && guard < 100000; guard++) {
@@ -654,6 +655,7 @@ static int boot_exe(void) {
     gamefix_init();
     { void agent_init(void); agent_init(); } /* playtest: FE2's HUD text */
     state_init();
+    ach_init();
     LOG("entering %08X\n", pc);
     state_boot(pc); /* the game from its entry point, or from --load-state's state */
     LOG("exe returned\n");
