@@ -18,7 +18,7 @@
     {
       "id": "discs",
       "role": "disc",
-      "label": "Your USA BIN/CUE disc images (Fear Effect and/or Fear Effect 2). One folder is enough; subfolders are fine. Not the remaster .7z pack.",
+      "label": "USA BIN/CUE discs (Fear Effect and/or Fear Effect 2). One folder.",
       "formats": [
         {
           "type": "folder"
@@ -28,7 +28,7 @@
     {
       "id": "assets",
       "role": "dlc",
-      "label": "The remaster pack: the folder with the published .7z files, or an already extracted pack. Not your disc images.",
+      "label": "Remaster pack (.7z or extracted). https://feremaster.us/downloads",
       "formats": [
         {
           "type": "folder"
@@ -85,7 +85,7 @@
     ],
     "label": "Building the game from your discs",
     "timeout": 10800,
-    "version": "4"
+    "version": "5"
   },
   "config": [
     {

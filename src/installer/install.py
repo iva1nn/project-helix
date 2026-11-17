@@ -400,10 +400,13 @@ def unextracted_archives():
 
 
 def get_it(game):
-    """' Download: <link>' for the game's current pack, if the repository has one"""
+    """Where to get the published pack (feremaster.us, then the game's Drive link if the repo has one)."""
     pins = PACKS.get(game, [])
     url = pins[-1].get("url") if pins else None
-    return ("\n      Download: %s" % url) if url else ""
+    line = "\n      Download: https://feremaster.us/downloads"
+    if url:
+        line += "  %s" % url
+    return line
 
 
 def check_archive(game, arc):
@@ -806,7 +809,7 @@ def adopt_assets(folder):
     if not roots and not archives:
         if looks_like_disc_folder(folder):
             raise Fail("that folder holds disc images, not the remaster pack. Pick your BIN/CUE folder as the discs, "
-                       "and pick the folder with the remaster .7z files (or an extracted pack) as the asset pack. "
+                       "and the remaster pack (.7z or extracted) as the asset pack: https://feremaster.us/downloads "
                        "(%s)" % folder)
         raise Fail("that folder is not a remaster pack: it has no fe1/fe2/manifests folders and no published "
                    ".7z archives (%s). Put the pack .7z files in it, or extract a pack first." % folder)
