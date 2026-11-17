@@ -25,7 +25,7 @@ Every failure the player can run into ends in "INSTALL STOPPED: <what happened a
 bare traceback; problems that do not block (a missing shortcut, a duplicate disc) are notes.
 """
 import argparse, errno, hashlib, json, os, re, shutil, socket, ssl, subprocess, sys, tarfile, time, urllib.error
-import urllib.request, zipfile
+import urllib.request, zipfile, zlib
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -177,6 +177,36 @@ def sha256_file(p):
                 break
             h.update(b)
     return h.hexdigest()
+
+
+def crc32_file(p):
+    """CRC32 of the whole file, as eight lowercase hex digits (Redump's track CRC)."""
+    h = 0
+    with open(p, "rb") as f:
+        while True:
+            b = f.read(1 << 22)
+            if not b:
+                break
+            h = zlib.crc32(b, h)
+    return "%08x" % (h & 0xFFFFFFFF)
+
+
+def known_dump_error(path, title, number, serial, want):
+    """None when this data track is the known-good dump, else why it must not be built.
+
+    size and crc32 come from Redump for the one revision this port reads. A track that is the
+    right game but not that image (cut short, a bad rip, another write offset) is refused here,
+    before the game is compiled or started.
+    """
+    need_size = int(want.get("size") or 0)
+    need_crc = str(want.get("crc32") or "").strip().lower()
+    if not need_size or len(need_crc) != 8:
+        return None
+    size = Path(path).stat().st_size
+    if size != need_size or crc32_file(path) != need_crc:
+        return ("not the known-good dump of %s disc %s (%s). Copy or dump the disc again: "
+                "it has to be the Redump BIN/CUE of this version" % (title, number, serial))
+    return None
 
 
 def why(e):
@@ -587,6 +617,9 @@ def identify(path, image):
                     if f not in fs or hashlib.sha1(d.file(f)).hexdigest() != sha:
                         return game, int(n), ("a different version of %s disc %s (%s): the port needs %s" % (
                             g["title"], n, serial, g["version"]))
+                bad = known_dump_error(image, g["title"], n, serial, want)
+                if bad:
+                    return game, int(n), bad
                 return game, int(n), None
     except Exception:
         return None, None, "a damaged disc image (its files cannot be read)"

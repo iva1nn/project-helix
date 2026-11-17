@@ -8,6 +8,8 @@
   "discs": {
    "1": {
     "serial": "SLUS-00920",
+    "size": 487435536,
+    "crc32": "0044d5f7",
     "files": {
      "/SLUS_009.20": "5199f3064277768b9144d0bd4602f6922f718f53",
      "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
@@ -16,6 +18,8 @@
    },
    "2": {
     "serial": "SLUS-01056",
+    "size": 505757616,
+    "crc32": "cb8e774f",
     "files": {
      "/SLUS_010.56": "5199f3064277768b9144d0bd4602f6922f718f53",
      "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
@@ -25,6 +29,8 @@
    },
    "3": {
     "serial": "SLUS-01057",
+    "size": 451666320,
+    "crc32": "fd0f561b",
     "files": {
      "/SLUS_010.57": "5199f3064277768b9144d0bd4602f6922f718f53",
      "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
@@ -33,6 +39,8 @@
    },
    "4": {
     "serial": "SLUS-01058",
+    "size": 509955936,
+    "crc32": "9853995e",
     "files": {
      "/SLUS_010.58": "5199f3064277768b9144d0bd4602f6922f718f53",
      "/OVERLAY/GSHELL.OVR": "3ce15390ee8d781399b75c792cdc9fb2c72f806e",
@@ -52,6 +60,8 @@
   "discs": {
    "1": {
     "serial": "SLUS-01266",
+    "size": 746844672,
+    "crc32": "156bfdb4",
     "files": {
      "/SLUS_012.66": "a5784ca239ccba595ab9e32139fc02ab040dad03",
      "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
@@ -64,6 +74,8 @@
    },
    "2": {
     "serial": "SLUS-01275",
+    "size": 695222976,
+    "crc32": "746ad7c9",
     "files": {
      "/SLUS_012.75": "a5784ca239ccba595ab9e32139fc02ab040dad03",
      "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
@@ -76,6 +88,8 @@
    },
    "3": {
     "serial": "SLUS-01276",
+    "size": 641439792,
+    "crc32": "fc16649d",
     "files": {
      "/SLUS_012.76": "a5784ca239ccba595ab9e32139fc02ab040dad03",
      "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
@@ -88,6 +102,8 @@
    },
    "4": {
     "serial": "SLUS-01277",
+    "size": 715087968,
+    "crc32": "8d9b31eb",
     "files": {
      "/SLUS_012.77": "a5784ca239ccba595ab9e32139fc02ab040dad03",
      "/OVERLAY/CREDITS.OVR": "9cd1b7b45c24abd99c25ef689ef3a736bed4e844",
