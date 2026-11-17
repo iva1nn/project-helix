@@ -49,6 +49,7 @@ static struct { uint64_t frame; int font, x, y; char s[64]; } texts[32];
 static int text_pos;
 
 void agent_text(uint32_t s, int font, int x, int y) {
+    ach_on_text(s); /* achievements watch USE/TAKE and item names even when the playtest agent is off */
     if (!agent_on) return;
     char t[64];
     int n = 0;
@@ -173,6 +174,25 @@ void agent_vblank(void) {
             FILE *f = fopen(line + 4, "wb");
             if (f) { fwrite(psx_ram, 1, PSX_RAM_SIZE, f); fclose(f); }
             printf(f ? "ok\n" : "err cannot write\n");
+        } else if (!strcmp(line, "ach")) {
+            printf("ok");
+            for (int i = 0, n = ach_fired_n(); i < n; i++) printf("%s%s", i ? "," : " ", ach_fired_at(i));
+            printf("\n");
+        } else if (!strcmp(line, "ach_reset")) {
+            ach_reset_fired();
+            printf("ok\n");
+        } else if (!strncmp(line, "ach_fire ", 9)) {
+            ach_fire_named(line + 9);
+            printf("ok\n");
+        } else if (!strncmp(line, "ach_text ", 9)) {
+            ach_feed_text(line + 9);
+            printf("ok\n");
+        } else if (sscanf(line, "disc %d", &len) == 1) {
+            if (len >= 1 && len <= 4) disc_current = len - 1;
+            printf("ok %d\n", disc_current + 1);
+        } else if (!strcmp(line, "hold_clear")) {
+            nholds = 0;
+            printf("ok\n");
         } else if (!strcmp(line, "quit")) {
             exit(0);
         } else printf("err unknown command\n");

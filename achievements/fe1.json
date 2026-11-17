@@ -1,0 +1,531 @@
+{
+  "format": 1,
+  "game": "project-helix--fe1",
+  "source": "events",
+  "console": "psx",
+  "copies": [
+    "SLUS-00920",
+    "SLUS-01056",
+    "SLUS-01057",
+    "SLUS-01058"
+  ],
+  "versions": ">=1.2.0",
+  "voids": [
+    "game/cheat_health",
+    "game/cheat_ammo"
+  ],
+  "achievements": [
+    {
+      "id": 1,
+      "title": "Blowing Off the Steam",
+      "description": "[Hana] Use steam to defeat a guard",
+      "points": 5,
+      "type": "progression",
+      "event": "blowing_off_the_steam"
+    },
+    {
+      "id": 2,
+      "title": "Silent Aproach",
+      "description": "[Hana] From the beginning on the helipad, reach the electrified ground without being detected",
+      "points": 5,
+      "type": "missable",
+      "event": "silent_aproach"
+    },
+    {
+      "id": 3,
+      "title": "Electric",
+      "description": "[Hana] Use the fuse to restore power and electrocute the guards",
+      "points": 5,
+      "type": "progression",
+      "event": "electric"
+    },
+    {
+      "id": 4,
+      "title": "I Thought I Was a Dead Man",
+      "description": "[Hana] Defuse the bomb attached to Jin",
+      "points": 5,
+      "type": "progression",
+      "event": "i_thought_i_was_a_dead_man"
+    },
+    {
+      "id": 5,
+      "title": "Fast Fingers",
+      "description": "[Hana] Defuse the bomb attached to Jin with 5 minutes and 40 seconds or more remaining",
+      "points": 5,
+      "type": "missable",
+      "event": "fast_fingers"
+    },
+    {
+      "id": 6,
+      "title": "Dodging Bullets",
+      "description": "[Hana] Beginning from detonating the door, reach the Triad Mobster without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "dodging_bullets"
+    },
+    {
+      "id": 7,
+      "title": "Triad Mobster",
+      "description": "[Hana] Kill the Triad Mobster",
+      "points": 5,
+      "type": "progression",
+      "event": "triad_mobster"
+    },
+    {
+      "id": 8,
+      "title": "Triad Mobster (Perfect)",
+      "description": "[Hana] Kill the Triad Mobster without taking damage",
+      "points": 10,
+      "type": "missable",
+      "event": "triad_mobster_perfect"
+    },
+    {
+      "id": 9,
+      "title": "Starting With a Bang",
+      "description": "[Glas] When gaining control of Glas, make it all the way to the falling cutscene damageless",
+      "points": 5,
+      "type": "missable",
+      "event": "starting_with_a_bang"
+    },
+    {
+      "id": 10,
+      "title": "The Great Escape",
+      "description": "[Hana] Knock out the guards and meet Mr.Lam without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "the_great_escape"
+    },
+    {
+      "id": 11,
+      "title": "Aircraft",
+      "description": "[Glas] Destroy the Aircraft",
+      "points": 5,
+      "type": "progression",
+      "event": "aircraft"
+    },
+    {
+      "id": 12,
+      "title": "Aircraft (Perfect)",
+      "description": "[Glas] Destroy the Aircraft without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "aircraft_perfect"
+    },
+    {
+      "id": 13,
+      "title": "Joining the Party",
+      "description": "[Glas] Find Hana without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "joining_the_party"
+    },
+    {
+      "id": 14,
+      "title": "Helicopter Shooter",
+      "description": "[Hana] Destroy the Helicopter Shooter",
+      "points": 5,
+      "type": "progression",
+      "event": "helicopter_shooter"
+    },
+    {
+      "id": 15,
+      "title": "Helicopter Shooter (Perfect)",
+      "description": "[Hana] Destroy the Helicopter Shooter without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "helicopter_shooter_perfect"
+    },
+    {
+      "id": 16,
+      "title": "Fear Effect [CD1]",
+      "description": "Finish the first disc",
+      "points": 10,
+      "type": "progression",
+      "event": "fear_effect_cd1"
+    },
+    {
+      "id": 17,
+      "title": "Fear Effect Fast [CD1]",
+      "description": "Finish the first disc in 25 minutes or less",
+      "points": 10,
+      "type": "missable",
+      "event": "fear_effect_fast_cd1"
+    },
+    {
+      "id": 18,
+      "title": "Left 4 Dead",
+      "description": "[Deke] Defeat the first three zombies damageless",
+      "points": 10,
+      "type": "missable",
+      "event": "left_4_dead"
+    },
+    {
+      "id": 19,
+      "title": "Undressed to Kill",
+      "description": "[Hana] Get the Po Mon key and open the hut door",
+      "points": 5,
+      "type": "progression",
+      "event": "undressed_to_kill"
+    },
+    {
+      "id": 20,
+      "title": "Undressed to Kill (Perfect)",
+      "description": "[Hana] Get the Po Mon key and open the hut door damageless",
+      "points": 5,
+      "type": "missable",
+      "event": "undressed_to_kill_perfect"
+    },
+    {
+      "id": 21,
+      "title": "They Are Too Distracted to Hit Me",
+      "description": "[Hana] After using Po Mon key, reach the towel cutscene damageless",
+      "points": 5,
+      "type": "missable",
+      "event": "they_are_too_distracted_to_hit_me"
+    },
+    {
+      "id": 22,
+      "title": "More Stunning Than a Flash Grenade",
+      "description": "[Hana] Blind a guard with nudity",
+      "points": 5,
+      "type": "progression",
+      "event": "more_stunning_than_a_flash_grenade"
+    },
+    {
+      "id": 23,
+      "title": "The Train Mercenary",
+      "description": "[Deke] Kill the machine gunner inside the train",
+      "points": 5,
+      "type": "progression",
+      "event": "the_train_mercenary"
+    },
+    {
+      "id": 24,
+      "title": "The Train Mercenary (Perfect)",
+      "description": "[Deke] Kill the machine gunner inside the train without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "the_train_mercenary_perfect"
+    },
+    {
+      "id": 25,
+      "title": "Electrician",
+      "description": "[Deke] Solve the ladder puzzle",
+      "points": 5,
+      "type": "progression",
+      "event": "electrician"
+    },
+    {
+      "id": 26,
+      "title": "Demons on the Ceiling",
+      "description": "[Deke] After climbing the stairs, kill all the demons",
+      "points": 5,
+      "type": "progression",
+      "event": "demons_on_the_ceiling"
+    },
+    {
+      "id": 27,
+      "title": "Demons on the Ceiling (Perfect)",
+      "description": "[Deke] After climbing the stairs, kill all the demons without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "demons_on_the_ceiling_perfect"
+    },
+    {
+      "id": 28,
+      "title": "Walking Dead",
+      "description": "[Glas] Pass through the Glas area without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "walking_dead"
+    },
+    {
+      "id": 29,
+      "title": "All Aboard!",
+      "description": "[Hana] Solve the train puzzle",
+      "points": 5,
+      "type": "progression",
+      "event": "all_aboard"
+    },
+    {
+      "id": 30,
+      "title": "Fear Effect [CD2]",
+      "description": "Finish the second disc",
+      "points": 10,
+      "type": "progression",
+      "event": "fear_effect_cd2"
+    },
+    {
+      "id": 31,
+      "title": "Fear Effect Fast [CD2]",
+      "description": "Finish the second disc in 25 minutes or less",
+      "points": 10,
+      "type": "missable",
+      "event": "fear_effect_fast_cd2"
+    },
+    {
+      "id": 32,
+      "title": "Caution, Wet Floor",
+      "description": "[Glas] Lure the guard and knock him down without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "caution_wet_floor"
+    },
+    {
+      "id": 33,
+      "title": "Master Chef",
+      "description": "[Glas] Use hot oil against your enemy",
+      "points": 5,
+      "type": "progression",
+      "event": "master_chef"
+    },
+    {
+      "id": 34,
+      "title": "Make Yourself Comfortable",
+      "description": "[Hana] Wear a very appropriate disguise",
+      "points": 5,
+      "type": "progression",
+      "event": "make_yourself_comfortable"
+    },
+    {
+      "id": 35,
+      "title": "Femme Fatale I",
+      "description": "[Hana] After wearing the disguise, kill 6 guards without being noticed (1F only)",
+      "points": 5,
+      "type": "missable",
+      "event": "femme_fatale_i"
+    },
+    {
+      "id": 36,
+      "title": "Femme Fatale II",
+      "description": "[Hana] After wearing the disguise, kill 8 guards without being noticed (2F only, before red door)",
+      "points": 5,
+      "type": "missable",
+      "event": "femme_fatale_ii"
+    },
+    {
+      "id": 37,
+      "title": "Puppet Show",
+      "description": "[Deke] Solve the dancing doll puzzle",
+      "points": 5,
+      "type": "progression",
+      "event": "puppet_show"
+    },
+    {
+      "id": 38,
+      "title": "Just Two Guys Patrolling an Oval Bedroom",
+      "description": "[Deke] Stealth kill both guards in the large oval bedroom",
+      "points": 5,
+      "type": "missable",
+      "event": "just_two_guys_patrolling_an_oval_bedroom"
+    },
+    {
+      "id": 39,
+      "title": "Shadows in the Basement",
+      "description": "[Deke] Stealth kill both guards in the boiler room",
+      "points": 5,
+      "type": "missable",
+      "event": "shadows_in_the_basement"
+    },
+    {
+      "id": 40,
+      "title": "The Mercenary Under the Bed",
+      "description": "[Glas] Kill the machine gun shooter under the bed",
+      "points": 5,
+      "type": "progression",
+      "event": "the_mercenary_under_the_bed"
+    },
+    {
+      "id": 41,
+      "title": "The Mercenary Under the Bed (Perfect)",
+      "description": "[Glas] Kill the machine gun shooter under the bed damageless",
+      "points": 5,
+      "type": "missable",
+      "event": "the_mercenary_under_the_bed_perfect"
+    },
+    {
+      "id": 42,
+      "title": "Femme Fatale III",
+      "description": "[Hana] After picking up the flower, kill 2 guards without being noticed (before vase puzzle)",
+      "points": 5,
+      "type": "missable",
+      "event": "femme_fatale_iii"
+    },
+    {
+      "id": 43,
+      "title": "Florist",
+      "description": "[Hana] Solve the vases puzzle",
+      "points": 5,
+      "type": "progression",
+      "event": "florist"
+    },
+    {
+      "id": 44,
+      "title": "Fashionista",
+      "description": "[Hana] After the vases puzzle, change clothes without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "fashionista"
+    },
+    {
+      "id": 45,
+      "title": "Madam Chen (Perfect)",
+      "description": "[Hana] Kill Madam Chen damageless",
+      "points": 5,
+      "type": "missable",
+      "event": "madam_chen_perfect"
+    },
+    {
+      "id": 46,
+      "title": "Fear Effect [CD3]",
+      "description": "Finish the third disc",
+      "points": 5,
+      "type": "progression",
+      "event": "fear_effect_cd3"
+    },
+    {
+      "id": 47,
+      "title": "Fear Effect Fast [CD3]",
+      "description": "Finish the third disc in 35 minutes or less",
+      "points": 10,
+      "type": "missable",
+      "event": "fear_effect_fast_cd3"
+    },
+    {
+      "id": 48,
+      "title": "Hell's Gate",
+      "description": "[Hana] Check on gate in hell",
+      "points": 5,
+      "type": "missable",
+      "event": "hell_s_gate"
+    },
+    {
+      "id": 49,
+      "title": "A Favor for Madam Chen",
+      "description": "[Hana] Give a doll for Madam Chen's daughter",
+      "points": 5,
+      "type": "progression",
+      "event": "a_favor_for_madam_chen"
+    },
+    {
+      "id": 50,
+      "title": "From Womb to Tomb",
+      "description": "[Hana] Solve the age puzzle",
+      "points": 5,
+      "type": "progression",
+      "event": "from_womb_to_tomb"
+    },
+    {
+      "id": 51,
+      "title": "The White Guard of Impermanence",
+      "description": "[Hana] Open the door to the White Guard of Impermanence",
+      "points": 5,
+      "type": "progression",
+      "event": "the_white_guard_of_impermanence"
+    },
+    {
+      "id": 52,
+      "title": "Beyond the Hell's Gate",
+      "description": "[Hana] Open Hell's Gate",
+      "points": 5,
+      "type": "progression",
+      "event": "beyond_the_hell_s_gate"
+    },
+    {
+      "id": 53,
+      "title": "Drakologist",
+      "description": "[Glas] In one sitting, check on all dragon statues in the cavern",
+      "points": 10,
+      "type": "missable",
+      "event": "drakologist"
+    },
+    {
+      "id": 54,
+      "title": "Stone Sword",
+      "description": "[Glas] Get the Stone Sword",
+      "points": 5,
+      "type": "progression",
+      "event": "stone_sword"
+    },
+    {
+      "id": 55,
+      "title": "Ghost",
+      "description": "[Glas] Defeat the Ghost",
+      "points": 5,
+      "type": "progression",
+      "event": "ghost"
+    },
+    {
+      "id": 56,
+      "title": "Ghost (Perfect)",
+      "description": "[Glas] Defeat the Ghost without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "ghost_perfect"
+    },
+    {
+      "id": 57,
+      "title": "Fight in Hell",
+      "description": "[Hana] Obtain the second half of the Stone Tree and defeat all demons without taking any damage",
+      "points": 5,
+      "type": "missable",
+      "event": "fight_in_hell"
+    },
+    {
+      "id": 58,
+      "title": "Fear Effect [CD4]",
+      "description": "Finish the fourth disc",
+      "points": 10,
+      "type": "progression",
+      "event": "fear_effect_cd4"
+    },
+    {
+      "id": 59,
+      "title": "Fear Effect Fast [CD4, Hana]",
+      "description": "Finish Hana's part on disc four in 25 minutes or less",
+      "points": 10,
+      "type": "missable",
+      "event": "fear_effect_fast_cd4_hana"
+    },
+    {
+      "id": 60,
+      "title": "Fear Effect Fast [CD4, Glas]",
+      "description": "Finish Glas' part on disc four in 20 minutes or less",
+      "points": 10,
+      "type": "missable",
+      "event": "fear_effect_fast_cd4_glas"
+    },
+    {
+      "id": 61,
+      "title": "Mystic Symbols",
+      "description": "[Hana] Complete the symbols puzzle",
+      "points": 5,
+      "type": "progression",
+      "event": "mystic_symbols"
+    },
+    {
+      "id": 62,
+      "title": "Now I Have Ruined Everything...",
+      "description": "[Hana] Get Hana's Ending",
+      "points": 10,
+      "type": "win",
+      "event": "now_i_have_ruined_everything"
+    },
+    {
+      "id": 63,
+      "title": "Paper Doll",
+      "description": "[Glas] Get Glas' ending",
+      "points": 10,
+      "type": "win",
+      "event": "paper_doll"
+    },
+    {
+      "id": 64,
+      "title": "A Hot Night",
+      "description": "[Hard Only] Get the best ending",
+      "points": 25,
+      "type": "missable",
+      "event": "a_hot_night"
+    }
+  ]
+}

@@ -316,11 +316,13 @@ static void row_change(int id, int d) {
         cheat_health = !cheat_health;
         save_int("cheat_health", cheat_health);
         LOG("cheats: infinite health %s\n", onoff(cheat_health));
+        if (cheat_health) ach_cheats_used();
         break;
     case X_CHEAT_AMMO:
         cheat_ammo = !cheat_ammo;
         save_int("cheat_ammo", cheat_ammo);
         LOG("cheats: infinite ammo %s\n", onoff(cheat_ammo));
+        if (cheat_ammo) ach_cheats_used();
         break;
     default:
         if (id >= X_MAP0 && id < X_MAP0 + 8) {

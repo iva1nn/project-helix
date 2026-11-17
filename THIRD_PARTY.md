@@ -6,6 +6,9 @@
 |---|---|---|
 | stb_image, stb_truetype (Sean Barrett) | `src/runtime/third_party/stb_*.h` | public domain / MIT (either), see each file's end |
 | xxHash (Yann Collet) | `src/runtime/third_party/xxhash.h` | BSD 2-Clause, see the file's header |
+| Recomp Achievements SDK (Ripalda) | `src/runtime/third_party/rl-achievements/` | Recomp Achievements License 1.0, `src/runtime/third_party/rl-achievements/LICENSE` |
+| rcheevos | `src/runtime/third_party/rl-achievements/third_party/rcheevos/` | MIT, see that folder's LICENSE |
+| cJSON (Dave Gamble) | `src/runtime/third_party/rl-achievements/third_party/cjson/` | MIT, see that folder's LICENSE |
 | Anton, Barlow, Barlow Condensed, Oswald fonts | `src/fonts/*.ttf` | SIL Open Font License 1.1, `src/fonts/OFL.txt` |
 | Special Elite font (Astigmatic) | `src/fonts/SpecialElite-Regular.ttf` | Apache License 2.0, https://www.apache.org/licenses/LICENSE-2.0 |
 
