@@ -14,17 +14,34 @@
     "settings.groups"
   ],
   "min": "0.90.0-beta.36",
-  "inputs": [
-    {
-      "id": "discs",
-      "role": "disc",
-      "label": "USA BIN/CUE discs (Fear Effect and/or Fear Effect 2). One folder.",
-      "formats": [
-        {
-          "type": "folder"
-        }
+  "game": {
+    "kind": "folder",
+    "label": "USA BIN/CUE discs (Fear Effect and/or Fear Effect 2). One folder.",
+    "check": {
+      "iso9660": "SYSTEM.CNF",
+      "ids": [
+        "SLUS-00920",
+        "SLUS-01056",
+        "SLUS-01057",
+        "SLUS-01058",
+        "SLUS-01266",
+        "SLUS-01275",
+        "SLUS-01276",
+        "SLUS-01277"
       ]
     },
+    "dumps": [
+      { "name": "Fear Effect (USA) disc 1", "size": 487435536, "crc32": "0044d5f7" },
+      { "name": "Fear Effect (USA) disc 2", "size": 505757616, "crc32": "cb8e774f" },
+      { "name": "Fear Effect (USA) disc 3", "size": 451666320, "crc32": "fd0f561b" },
+      { "name": "Fear Effect (USA) disc 4", "size": 509955936, "crc32": "9853995e" },
+      { "name": "Fear Effect 2 (USA) v1.1 disc 1", "size": 746844672, "crc32": "156bfdb4" },
+      { "name": "Fear Effect 2 (USA) v1.1 disc 2", "size": 695222976, "crc32": "746ad7c9" },
+      { "name": "Fear Effect 2 (USA) v1.1 disc 3", "size": 641439792, "crc32": "fc16649d" },
+      { "name": "Fear Effect 2 (USA) v1.1 disc 4", "size": 715087968, "crc32": "8d9b31eb" }
+    ]
+  },
+  "inputs": [
     {
       "id": "assets",
       "role": "dlc",
@@ -80,12 +97,12 @@
       "--no-shortcuts",
       "--no-steam",
       "--yes",
-      "--launcher-disc={input:discs}",
+      "--launcher-disc={game}",
       "--launcher-assets={input:assets}"
     ],
     "label": "Building the game from your discs",
     "timeout": 10800,
-    "version": "5"
+    "version": "6"
   },
   "config": [
     {
