@@ -53,6 +53,8 @@ static const GameAddrs FE1 = {0x800872D0, 0x80082B2C, 0x80082D60, 0x80087230, 0x
 #define BIT_DOWN (1u << 6)
 #define BIT_LEFT (1u << 7)
 #define DIRECTION_BITS (BIT_UP | BIT_RIGHT | BIT_DOWN | BIT_LEFT)
+#define BIT_L2 (1u << 8)
+#define BIT_R2 (1u << 9)
 #define BIT_L1 (1u << 10)
 #define BIT_SQUARE (1u << 15)
 
@@ -66,6 +68,12 @@ static int32_t last_pos[3];
 static uint64_t last_move_frame, up_since, square_since, prev_frame;
 static int32_t prev_read, prev_wrote;
 static int dec_steer, dec_wrote = -1; /* this frame's decision, for the re-apply at the vblank */
+/* While evade is held the game rolls "forward" along the facing. Turning toward the stick during that roll
+ * starts the roll on the old heading and then swings it onto the new one (issue: the roll flips part-way).
+ * The heading is taken on the first evade frame and kept until evade is released. */
+static int roll_lock;
+static int32_t roll_facing;
+static double roll_in_deg;
 
 static int in_ram(uint32_t a) { return (a & 0xFFE00000u) == 0x80000000u && (a & 0x1FFFFFu) < 0x1FFF00u; }
 
@@ -258,7 +266,7 @@ static int decide(uint16_t buttons, uint8_t lx, uint8_t ly, uint64_t frame, int 
         sx = ((buttons & BIT_RIGHT) ? 1.0 : 0.0) - ((buttons & BIT_LEFT) ? 1.0 : 0.0);
         sy = ((buttons & BIT_DOWN) ? 1.0 : 0.0) - ((buttons & BIT_UP) ? 1.0 : 0.0);
     }
-    if (sx == 0.0 && sy == 0.0) { reset_steering(); return 0; }
+    if (sx == 0.0 && sy == 0.0) { reset_steering(); roll_lock = 0; return 0; }
     double in_deg = fmod(atan2(sx, -sy) * 180.0 / PI + 360.0, 360.0);
     int starting = !active;
     active = 1;
@@ -297,8 +305,16 @@ static int decide(uint16_t buttons, uint8_t lx, uint8_t ly, uint64_t frame, int 
     int32_t before = read;
     /* the game's update sometimes writes back the facing it read before our write: carry on from ours */
     if (prev_valid && frame - prev_frame == 1 && prev_wrote != prev_read && read == prev_read) before = prev_wrote;
+    /* Evade (L2, or R2 on the layout that puts the roll there): face the held direction at once and keep that
+     * heading while the stick stays put. A slow turn starts the roll on the old facing and swings it around as the
+     * facing arrives. A new stick direction (more than HOLD_ANGLE) takes a new heading; a camera-mapping flip does not. */
+    if (buttons & (BIT_L2 | BIT_R2)) {
+        if (!roll_lock || angle_diff(in_deg, roll_in_deg) > HOLD_ANGLE) {
+            roll_lock = 1; roll_facing = want; roll_in_deg = in_deg;
+        } else want = roll_facing;
+    } else roll_lock = 0;
     int32_t diff = wrap_facing(want - before);
-    int32_t step = diff < -TURN_STEP ? -TURN_STEP : diff > TURN_STEP ? TURN_STEP : diff;
+    int32_t step = roll_lock ? diff : diff < -TURN_STEP ? -TURN_STEP : diff > TURN_STEP ? TURN_STEP : diff;
     int32_t wrote = (before + step) & 4095;
     if (wrote != read) mem_w16(actor + ACTOR_FACING, (uint16_t)wrote);
     prev_valid = 1; prev_frame = frame; prev_read = read; prev_wrote = wrote;
