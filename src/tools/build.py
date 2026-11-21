@@ -76,8 +76,18 @@ if args.regen or not (gen / "files.txt").exists():
 
 srcs = [gen / f for f in (gen / "files.txt").read_text().split()]
 srcs += sorted((ROOT / "runtime").glob("*.c"))
+rl_ach = ROOT / "runtime" / "third_party" / "rl-achievements"
+srcs += [rl_ach / "src" / "rl_achievements.c", rl_ach / "third_party" / "cjson" / "cJSON.c"]
+srcs += sorted((rl_ach / "third_party" / "rcheevos" / "src" / "runtime").glob("*.c"))
+srcs += sorted((rl_ach / "third_party" / "rcheevos" / "src" / "util").glob("*.c"))
 cflags = ["-O1" if args.debug else args.opt, "-g" if args.debug else "-g0", "-fno-strict-aliasing", "-fwrapv", "-I", str(ROOT / "runtime"), "-I", str(gen),
-          "-I", str(SDL_INC), "-Wall", "-Wno-unused-label", "-Wno-unused-variable", "-Wno-unused-but-set-variable",
+          "-I", str(SDL_INC),
+          "-I", str(rl_ach / "include"),
+          "-I", str(rl_ach / "third_party" / "rcheevos" / "include"),
+          "-I", str(rl_ach / "third_party" / "rcheevos" / "src"),
+          "-I", str(rl_ach / "third_party" / "cjson"),
+          "-DRC_DISABLE_LUA",
+          "-Wall", "-Wno-unused-label", "-Wno-unused-variable", "-Wno-unused-but-set-variable",
           "-Wno-misleading-indentation", '-DFE_GAME="%s"' % game] + (["-DFE_WATCH"] if args.watch else []) + (
           [] if WINDOWS else ["-DFE_NO_FOPEN_WRAP"])
 # the port build named in save states (runtime/state.c): the commit, + "+" when the working tree has changes
@@ -92,7 +102,7 @@ cflags_state = ['-DFE_BUILD_ID="%s"' % build_id]
 
 def cc(src):
     o = obj / (src.parent.name + "_" + src.stem + ".o")
-    stamp = src.name == "state.c"  # carries the build id: compiled every time
+    stamp = src.name in ("state.c", "ach.c")  # build id in save states and the achievements hello
     if not stamp and o.exists() and o.stat().st_mtime > src.stat().st_mtime and all(
             o.stat().st_mtime > h.stat().st_mtime for h in list((ROOT / "runtime").glob("*.h")) + [gen / "funcs.h"]):
         return o, None

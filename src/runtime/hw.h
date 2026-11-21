@@ -192,6 +192,20 @@ void game_vblank(void);
 void cheats_vblank(void);
 int cheats_load(const char *path);
 void cheats_enable(const char *name_part);
+int cheats_any_on(void);
+
+/* Recomp Achievements (runtime/ach.c) */
+void ach_init(void);
+void ach_frame(void);
+void ach_save_state_loaded(void);
+void ach_memcard_loaded(void);
+void ach_cheats_used(void);
+void ach_on_text(uint32_t s); /* every string the game's text routine draws (subs.c) */
+void ach_feed_text(const char *s); /* host string, same matchers as ach_on_text (playtest) */
+void ach_fire_named(const char *name);
+void ach_reset_fired(void);
+int ach_fired_n(void);
+const char *ach_fired_at(int i);
 void cdrom_init(void);
 uint8_t cdrom_read(uint32_t addr);
 void cdrom_write(uint32_t addr, uint8_t v);

@@ -1,0 +1,651 @@
+{
+  "format": 1,
+  "game": "project-helix",
+  "source": "events",
+  "console": "psx",
+  "copies": [
+    "SLUS-01266",
+    "SLUS-01275",
+    "SLUS-01276",
+    "SLUS-01277"
+  ],
+  "versions": ">=1.2.0",
+  "voids": [
+    "game/cheat_health",
+    "game/cheat_ammo"
+  ],
+  "achievements": [
+    {
+      "id": 1,
+      "title": "Blackout",
+      "description": "As Hana, discover a hidden EMP in the Aqueducts",
+      "points": 5,
+      "type": "progression",
+      "event": "blackout"
+    },
+    {
+      "id": 2,
+      "title": "Mighty Foot Engaged",
+      "description": "As Hana, before turning on the generator for the second time, take down five Fixers with your Melee attack in the Aqueducts without dying",
+      "points": 5,
+      "type": "missable",
+      "event": "mighty_foot_engaged"
+    },
+    {
+      "id": 3,
+      "title": "I'm a Professional, I Swear",
+      "description": "As Hana, accidentally destroy the generator and have the damn thing blow up in your face",
+      "points": 5,
+      "type": "progression",
+      "event": "i_m_a_professional_i_swear"
+    },
+    {
+      "id": 4,
+      "title": "No Sweat",
+      "description": "As Rain, escape the steam room without taking damage",
+      "points": 10,
+      "type": "missable",
+      "event": "no_sweat"
+    },
+    {
+      "id": 5,
+      "title": "One for Me...",
+      "description": "As Rain, find a hidden Uzi in the Aqueducts",
+      "points": 5,
+      "type": "missable",
+      "event": "one_for_me"
+    },
+    {
+      "id": 6,
+      "title": "Curiosity Killed the Cat",
+      "description": "As Rain, correctly guess the code to the locked door in the Aqueducts and face the consequences",
+      "points": 5,
+      "type": "missable",
+      "event": "curiosity_killed_the_cat"
+    },
+    {
+      "id": 7,
+      "title": "The Fastest Hacker in the East",
+      "description": "As Rain, successfully hack the first three computers in the Aqueducts within three minutes of in-game time",
+      "points": 5,
+      "type": "missable",
+      "event": "the_fastest_hacker_in_the_east"
+    },
+    {
+      "id": 8,
+      "title": "No Need for a Plumber",
+      "description": "As Rain, drain the water for Hana",
+      "points": 5,
+      "type": "progression",
+      "event": "no_need_for_a_plumber"
+    },
+    {
+      "id": 9,
+      "title": "I Have to Return Some Videotapes",
+      "description": "As Hana, grab Videotape A before the rats escape, and live to tell the tale",
+      "points": 5,
+      "type": "missable",
+      "event": "i_have_to_return_some_videotapes"
+    },
+    {
+      "id": 10,
+      "title": "...And One for You!",
+      "description": "As Hana, find a hidden Uzi in the Aqueducts",
+      "points": 5,
+      "type": "missable",
+      "event": "and_one_for_you"
+    },
+    {
+      "id": 11,
+      "title": "Shut Up and Take My Money!",
+      "description": "As Hana, watch all of Videotape A",
+      "points": 5,
+      "type": "missable",
+      "event": "shut_up_and_take_my_money"
+    },
+    {
+      "id": 12,
+      "title": "The Best Laid Plans",
+      "description": "As Hana, defeat the Planner using three bullets or less and without being hit",
+      "points": 10,
+      "type": "missable",
+      "event": "the_best_laid_plans"
+    },
+    {
+      "id": 13,
+      "title": "So...Are We Going to Talk About That Machine?",
+      "description": "Outrun the blast and escape the Aqueducts",
+      "points": 5,
+      "type": "progression",
+      "event": "so_are_we_going_to_talk_about_that_machine"
+    },
+    {
+      "id": 14,
+      "title": "Tough Kitties",
+      "description": "Complete the Aqueducts on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "tough_kitties"
+    },
+    {
+      "id": 15,
+      "title": "Overclocked",
+      "description": "As Rain, solve the circuit puzzle in under thirty seconds. Exit the puzzle to retry.",
+      "points": 5,
+      "type": "missable",
+      "event": "overclocked"
+    },
+    {
+      "id": 16,
+      "title": "Metal Gear Rain",
+      "description": "As Rain, stealth kill ten guards without dying before collecting Jin's package",
+      "points": 5,
+      "type": "missable",
+      "event": "metal_gear_rain"
+    },
+    {
+      "id": 17,
+      "title": "If Only Hana Were Here",
+      "description": "As Rain, brazenly attempt to shoot the banner, do a fancy acrobatic and swing across before dealing with the patrolling guards",
+      "points": 5,
+      "type": "missable",
+      "event": "if_only_hana_were_here"
+    },
+    {
+      "id": 18,
+      "title": "This \"Jin\" Fellow Certainly Seems Trustworthy",
+      "description": "As Rain, fight your way past the guards and collect Jin's package",
+      "points": 5,
+      "type": "progression",
+      "event": "this_jin_fellow_certainly_seems_trustworthy"
+    },
+    {
+      "id": 19,
+      "title": "That Even Beats My Last Shareholders' Meeting!",
+      "description": "As Hana, starting from the party entrance, reach Dr. Liu without alerting any of the guards in the Wing Chune Party",
+      "points": 5,
+      "type": "missable",
+      "event": "that_even_beats_my_last_shareholders_meeting"
+    },
+    {
+      "id": 20,
+      "title": "Piece of Cake",
+      "description": "As Hana, successfully steal Dr. Liu's DNA and fingerprints",
+      "points": 5,
+      "type": "progression",
+      "event": "piece_of_cake"
+    },
+    {
+      "id": 21,
+      "title": "Chain Lightning",
+      "description": "As Rain, use the Arc Taser to incapacitate three guards in the Wing Chune Gardens within five seconds. Stealth kills do not count.",
+      "points": 5,
+      "type": "missable",
+      "event": "chain_lightning"
+    },
+    {
+      "id": 22,
+      "title": "I'll Have What He's Having",
+      "description": "As Rain, obtain the elevator key and leave the room without being escorted out",
+      "points": 5,
+      "type": "missable",
+      "event": "i_ll_have_what_he_s_having"
+    },
+    {
+      "id": 23,
+      "title": "Hell of a Diversion",
+      "description": "Distract the guards with a show and take the elevator up to the Wing Chune Tower",
+      "points": 5,
+      "type": "progression",
+      "event": "hell_of_a_diversion"
+    },
+    {
+      "id": 24,
+      "title": "Party Hard",
+      "description": "Complete the Wing Chune Gardens and Party on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "party_hard"
+    },
+    {
+      "id": 25,
+      "title": "Rain S. Kennedy",
+      "description": "As Rain, obtain the Biolab Suit in the Wing Chune Tower without equipping any weapon other than the Knife",
+      "points": 5,
+      "type": "missable",
+      "event": "rain_s_kennedy"
+    },
+    {
+      "id": 26,
+      "title": "Pale Green Dot",
+      "description": "As Rain, solve the green dot puzzle in four moves or less. Exit the puzzle to retry.",
+      "points": 5,
+      "type": "missable",
+      "event": "pale_green_dot"
+    },
+    {
+      "id": 27,
+      "title": "It's All Very Technical",
+      "description": "As Hana, gracefully disable the motion sensor",
+      "points": 5,
+      "type": "progression",
+      "event": "it_s_all_very_technical"
+    },
+    {
+      "id": 28,
+      "title": "Let's Blow (Up) This Joint",
+      "description": "As Hana, discover a hidden room containing powerful weapons in the Wing Chune Tower",
+      "points": 5,
+      "type": "missable",
+      "event": "let_s_blow_up_this_joint"
+    },
+    {
+      "id": 29,
+      "title": "The Blueprint for Life",
+      "description": "As Hana, take a break and watch an educational video on DNA",
+      "points": 5,
+      "type": "missable",
+      "event": "the_blueprint_for_life"
+    },
+    {
+      "id": 30,
+      "title": "Out with the Old, In with the Nucleus",
+      "description": "As Hana, obtain the four colored blots",
+      "points": 5,
+      "type": "progression",
+      "event": "out_with_the_old_in_with_the_nucleus"
+    },
+    {
+      "id": 31,
+      "title": "Employee of the Month",
+      "description": "As Rain, defeat the Bio Boss without taking damage",
+      "points": 25,
+      "type": "missable",
+      "event": "employee_of_the_month"
+    },
+    {
+      "id": 32,
+      "title": "Mission Accomplished...Right?",
+      "description": "Stylishly depart the Wing Chune Towers with what you came for",
+      "points": 5,
+      "type": "progression",
+      "event": "mission_accomplished_right"
+    },
+    {
+      "id": 33,
+      "title": "Heist of the Century",
+      "description": "Complete the Wing Chune Towers on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "heist_of_the_century"
+    },
+    {
+      "id": 34,
+      "title": "Say Hello to My Little Friends",
+      "description": "As Deke, kill 20 Rejects with the Shot Pistols without dying before getting trapped in the Zombie room in Xi'an",
+      "points": 5,
+      "type": "missable",
+      "event": "say_hello_to_my_little_friends"
+    },
+    {
+      "id": 35,
+      "title": "Pocket Rocket",
+      "description": "As Deke, find a hidden RL-480 on the streets of Xi'an",
+      "points": 5,
+      "type": "missable",
+      "event": "pocket_rocket"
+    },
+    {
+      "id": 36,
+      "title": "We're Not Using the Z Word",
+      "description": "As Deke, blast your way through the Reject infested streets of Xi'an",
+      "points": 5,
+      "type": "progression",
+      "event": "we_re_not_using_the_z_word"
+    },
+    {
+      "id": 37,
+      "title": "My Hero!",
+      "description": "As Deke, \"rescue\" your new acquaintance by killing all three Rejects with the Sonic Boom without leaving the room and without taking damage",
+      "points": 10,
+      "type": "missable",
+      "event": "my_hero"
+    },
+    {
+      "id": 38,
+      "title": "We're All Friends Here",
+      "description": "As Deke, meet some familiar faces for the first time",
+      "points": 5,
+      "type": "progression",
+      "event": "we_re_all_friends_here"
+    },
+    {
+      "id": 39,
+      "title": "Nemesis Wannabes",
+      "description": "As Glas, find, kill and loot two Rejects in Xi'an who are mysteriously holding RL-480s",
+      "points": 5,
+      "type": "missable",
+      "event": "nemesis_wannabes"
+    },
+    {
+      "id": 40,
+      "title": "Can't We All Just Get Along?",
+      "description": "Repel the Reject horde and descend into the Tomb of the Emperor",
+      "points": 5,
+      "type": "progression",
+      "event": "can_t_we_all_just_get_along"
+    },
+    {
+      "id": 41,
+      "title": "Oh, You're an Immortal Then!",
+      "description": "Complete Xi'an on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "oh_you_re_an_immortal_then"
+    },
+    {
+      "id": 42,
+      "title": "Loading Up the Boomstick",
+      "description": "As Hana, find a hidden Shotgun Shell cache in the Tomb of the Emperor",
+      "points": 5,
+      "type": "missable",
+      "event": "loading_up_the_boomstick"
+    },
+    {
+      "id": 43,
+      "title": "Seven Days",
+      "description": "As Hana, put Chau Chen's spirit to rest and obtain the Lily Coin",
+      "points": 5,
+      "type": "progression",
+      "event": "seven_days"
+    },
+    {
+      "id": 44,
+      "title": "Wheel of Fortune",
+      "description": "As Hana, defeat the Bull Skull boss without letting him appear more than twice. Quit to Main Menu before loading your save to retry.",
+      "points": 5,
+      "type": "missable",
+      "event": "wheel_of_fortune"
+    },
+    {
+      "id": 45,
+      "title": "Reduced to Rubble",
+      "description": "As Hana, defeat the Golem and collect a Sacred Seal",
+      "points": 5,
+      "type": "progression",
+      "event": "reduced_to_rubble"
+    },
+    {
+      "id": 46,
+      "title": "Expedited Demolition",
+      "description": "As Hana, destroy the Golem within 30 seconds",
+      "points": 5,
+      "type": "missable",
+      "event": "expedited_demolition"
+    },
+    {
+      "id": 47,
+      "title": "Be Where Your Enemy Is Not",
+      "description": "As Glas, win your first match against the General without losing any of your units. Quit the battle to retry.",
+      "points": 5,
+      "type": "missable",
+      "event": "be_where_your_enemy_is_not"
+    },
+    {
+      "id": 48,
+      "title": "Great Results Can Be Achieved with Small Forces",
+      "description": "As Glas, win your second match against the General without losing any Small Soldier units. Quit the battle to retry.",
+      "points": 5,
+      "type": "missable",
+      "event": "great_results_can_be_achieved_with_small_forces"
+    },
+    {
+      "id": 49,
+      "title": "Patience is the Sharpest Blade",
+      "description": "As Glas, win your third match against the General by having a Large Soldier unit capture the flag. Quit the battle to retry.",
+      "points": 5,
+      "type": "missable",
+      "event": "patience_is_the_sharpest_blade"
+    },
+    {
+      "id": 50,
+      "title": "He Who Wishes to Fight Must First Count the Cost",
+      "description": "As Glas, win your fourth match against the General without losing more than four units. Quit the battle to retry.",
+      "points": 10,
+      "type": "missable",
+      "event": "he_who_wishes_to_fight_must_first_count_the_cost"
+    },
+    {
+      "id": 51,
+      "title": "Dead Men Tell No Tales",
+      "description": "Overcome the Emperor's challenges and escape his tomb",
+      "points": 5,
+      "type": "progression",
+      "event": "dead_men_tell_no_tales"
+    },
+    {
+      "id": 52,
+      "title": "You Are Indeed a Worthy Opponent!",
+      "description": "Complete the Tomb of the Emperor on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "you_are_indeed_a_worthy_opponent"
+    },
+    {
+      "id": 53,
+      "title": "S-Mart's Top of the Line",
+      "description": "As Hana, kill ten Demons with the Shotgun in Penglai Shan without taking damage",
+      "points": 5,
+      "type": "missable",
+      "event": "s_mart_s_top_of_the_line"
+    },
+    {
+      "id": 54,
+      "title": "A Diamond in the Rough",
+      "description": "As Hana, reluctantly obey the mysterious old woman and complete the elemental challenge",
+      "points": 5,
+      "type": "progression",
+      "event": "a_diamond_in_the_rough"
+    },
+    {
+      "id": 55,
+      "title": "The Roof Is on Fire",
+      "description": "As Glas, find two hidden SS-2000s in the Afghanistan flashback",
+      "points": 5,
+      "type": "missable",
+      "event": "the_roof_is_on_fire"
+    },
+    {
+      "id": 56,
+      "title": "Adding Insult to Injury",
+      "description": "In the Afghanistan flashback, when the M.A.W. has Glas cornered, stun it and then blow it up",
+      "points": 5,
+      "type": "missable",
+      "event": "adding_insult_to_injury"
+    },
+    {
+      "id": 57,
+      "title": "War...War Never Changes",
+      "description": "Finish reliving Glas' dark past and proceed onwards to The Tower of the Eight Immortals",
+      "points": 5,
+      "type": "progression",
+      "event": "war_war_never_changes"
+    },
+    {
+      "id": 58,
+      "title": "Time Is a Flat Circle",
+      "description": "Complete Penglai Shan on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "time_is_a_flat_circle"
+    },
+    {
+      "id": 59,
+      "title": "Now You're Thinking with Portals",
+      "description": "Conquer the Immortals' first four challenges",
+      "points": 5,
+      "type": "progression",
+      "event": "now_you_re_thinking_with_portals"
+    },
+    {
+      "id": 60,
+      "title": "Post-Traumatic Speedrun Disorder",
+      "description": "As Glas, defeat your doppelganger within twenty seconds",
+      "points": 5,
+      "type": "missable",
+      "event": "post_traumatic_speedrun_disorder"
+    },
+    {
+      "id": 61,
+      "title": "Mercy Begets Mercy",
+      "description": "As Hana, demonstrate your compassion via your earlier actions in the game and pass Chung Li Chuan without fighting him",
+      "points": 5,
+      "type": "missable",
+      "event": "mercy_begets_mercy"
+    },
+    {
+      "id": 62,
+      "title": "Violence Begets Violence",
+      "description": "As Hana, atone for your sins and defeat Chung Li Chuan in combat",
+      "points": 5,
+      "type": "progression",
+      "event": "violence_begets_violence"
+    },
+    {
+      "id": 63,
+      "title": "The Ties That Bind",
+      "description": "As Hana, face the past and defeat your demons",
+      "points": 5,
+      "type": "progression",
+      "event": "the_ties_that_bind"
+    },
+    {
+      "id": 64,
+      "title": "The Future Is Yours",
+      "description": "As Hana, look to the future and receive an ominous warning",
+      "points": 5,
+      "type": "progression",
+      "event": "the_future_is_yours"
+    },
+    {
+      "id": 65,
+      "title": "The Time for Change Is upon Us",
+      "description": "Ascend to the top of the Tower of the Immortals and enter the Genomic Void",
+      "points": 5,
+      "type": "progression",
+      "event": "the_time_for_change_is_upon_us"
+    },
+    {
+      "id": 66,
+      "title": "Ascension to Enlightenment",
+      "description": "Complete the Tower of the Immortals on Hard difficulty",
+      "points": 10,
+      "type": "missable",
+      "event": "ascension_to_enlightenment"
+    },
+    {
+      "id": 67,
+      "title": "Boom Goes the Dynamite",
+      "description": "As Deke, defeat the final boss without equipping any weapon other than the Sonic Boom (Bad ending route)",
+      "points": 10,
+      "type": "missable",
+      "event": "boom_goes_the_dynamite"
+    },
+    {
+      "id": 68,
+      "title": "Southpaw Supremacy",
+      "description": "As Rain, vanquish the final boss without taking damage (Good ending route)",
+      "points": 10,
+      "type": "missable",
+      "event": "southpaw_supremacy"
+    },
+    {
+      "id": 69,
+      "title": "Time for Dim Sum and a Haircut",
+      "description": "Fail to get paid (again), but secure the future of humanity by getting the Good ending",
+      "points": 10,
+      "type": "win",
+      "event": "time_for_dim_sum_and_a_haircut"
+    },
+    {
+      "id": 70,
+      "title": "Time Paradox",
+      "description": "Lament your decision and doom humanity by getting the Bad ending",
+      "points": 5,
+      "type": "win",
+      "event": "time_paradox"
+    },
+    {
+      "id": 71,
+      "title": "Dead Bodies Everywhere",
+      "description": "Have the entire party fail miserably at stopping evil and get a particularly bad \"ending\"",
+      "points": 5,
+      "type": "win",
+      "event": "dead_bodies_everywhere"
+    },
+    {
+      "id": 72,
+      "title": "I'm Sure This \"Little Runaway Job\" Will Be Much Easier",
+      "description": "Reach the Good ending on Hard difficulty",
+      "points": 25,
+      "type": "missable",
+      "event": "i_m_sure_this_little_runaway_job_will_be_much_easier"
+    },
+    {
+      "id": 73,
+      "title": "Purveyor of Fine Art I - Beginnings and Endings",
+      "description": "Unlock and view the Art Gallery on Disc One",
+      "points": 5,
+      "type": "missable",
+      "event": "purveyor_of_fine_art_i_beginnings_and_endings"
+    },
+    {
+      "id": 74,
+      "title": "Purveyor of Fine Art II - Tomb Raider? I Hardly Know Her",
+      "description": "Unlock and view the Art Gallery on Disc Two",
+      "points": 5,
+      "type": "missable",
+      "event": "purveyor_of_fine_art_ii_tomb_raider_i_hardly_know_her"
+    },
+    {
+      "id": 75,
+      "title": "Purveyor of Fine Art III - The Future Is a Foreign Land",
+      "description": "Unlock and view the Art Gallery on Disc Three",
+      "points": 5,
+      "type": "missable",
+      "event": "purveyor_of_fine_art_iii_the_future_is_a_foreign_land"
+    },
+    {
+      "id": 76,
+      "title": "Purveyor of Fine Art IV - Mission Complete: Time for a Massage",
+      "description": "Unlock and view the Art Gallery on Disc Four",
+      "points": 5,
+      "type": "missable",
+      "event": "purveyor_of_fine_art_iv_mission_complete_time_for_a_massage"
+    },
+    {
+      "id": 77,
+      "title": "Helium Effect 2",
+      "description": "After beating the game, load your cleared save. Input the correct code into a secret terminal to unlock Big Head mode!",
+      "points": 5,
+      "type": "missable",
+      "event": "helium_effect_2"
+    },
+    {
+      "id": 78,
+      "title": "Cutscenes? Where We're Going We Don't Need...Cutscenes",
+      "description": "Ignore Fear Effect 2's beautiful art and rich narrative by beating the game within two hours and thirty minutes of in-game time",
+      "points": 25,
+      "type": "missable",
+      "event": "cutscenes_where_we_re_going_we_don_t_need_cutscenes"
+    },
+    {
+      "id": 79,
+      "title": "Telephobia",
+      "description": "Beat Fear Effect 2 having saved no more than eight times",
+      "points": 25,
+      "type": "missable",
+      "event": "telephobia"
+    }
+  ]
+}

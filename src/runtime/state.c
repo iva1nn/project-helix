@@ -358,6 +358,7 @@ static int load_from(const char *path, int apply, char *err, size_t errn) {
     menu_state_loaded();
     state_loaded_frame = (int64_t)frame_count;
     frontend_state_loaded(path);
+    ach_save_state_loaded();
     LOG("state: loaded %s (%s, saved by build %s)\n", path, h.where, h.build);
 done:
     free(io.buf);
