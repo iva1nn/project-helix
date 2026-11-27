@@ -329,7 +329,10 @@ static uint32_t prims_of(const MPart *p, int buf) { return buf ? p->prims_b : p-
 
 /* Which model and part draws its packets at P (buffer buf), and where that model's RMD lies. Parts shared
  * between costumes (Hana's head in MARA, MAR3 and MAR4) match several tables: the table whose other parts
- * are found at the same RMD base wins. */
+ * are found at the same buffer base usually wins. A clothes change can leave the new costume's packets in
+ * the previous costume's buffer, so the shared head scores as the old table and the new clothes as the new
+ * one: each match draws that table's whole mesh and the two outfits overlap. The RMD in RAM then decides,
+ * even when its packet score is the lower one: the table whose parts' vertices sit at that RMD's headers. */
 static void request_mesh(MModel *m);
 
 /* the part's own vertices in RAM (RMD part header +0x3C -> int16 x, y, z, pad) are the table's: tells mirrored
@@ -430,6 +433,9 @@ static int identify(uint32_t P, int buf, uint32_t mesh, int skin, int *part, uin
     uint32_t fbase = 0;
     int tie_m[8], tie_q[8], nties = 0; /* other tables matching as well as the one found (twins) */
     uint32_t tie_b[8];
+    /* every table whose own packets match, with its best layout score (the RMD may overrule the winner) */
+    int cm[16], cq[16], cs[16], nc = 0;
+    uint32_t cb[16];
     for (int m = 0; m < nmodels; m++)
         for (int q = 0; q < models[m].nparts && !models[m].variant; q++) {
             const MPart *pq = &models[m].parts[q];
@@ -439,6 +445,12 @@ static int identify(uint32_t P, int buf, uint32_t mesh, int skin, int *part, uin
             int score = 1; /* among twins (the same part in two costumes' tables) the table found at one RMD base wins */
             for (int r = 0; r < models[m].nparts; r++)
                 score += part_matches(bs + prims_of(&models[m].parts[r], buf), &models[m].parts[r]);
+            if (!old_ident) {
+                int slot = -1;
+                for (int i = 0; i < nc; i++) if (cm[i] == m) { slot = i; break; }
+                if (slot < 0 && nc < 16) { slot = nc++; cs[slot] = -1; cm[slot] = m; }
+                if (slot >= 0 && score > cs[slot]) { cs[slot] = score; cq[slot] = q; cb[slot] = bs; }
+            }
             if (score > best) { best = score; found = m; fpart = q; fbase = bs; nties = 0; }
             else if (score == best && m != found && nties < 8) { tie_m[nties] = m; tie_q[nties] = q; tie_b[nties++] = bs; }
         }
@@ -475,12 +487,44 @@ static int identify(uint32_t P, int buf, uint32_t mesh, int skin, int *part, uin
                 models[found].name);
         }
     }
+    /* the packet-score winner can be the previous costume (shared head) while this part's RMD is the new one */
+    if (!old_ident && nc > 1 && found >= 0) {
+        uint32_t A = rmd_base_of(mesh);
+        int s0 = A ? rmd_score(A, &models[found]) : 0, was = found;
+        for (int i = 0; A && i < nc; i++) {
+            if (cm[i] == found) continue;
+            int s = rmd_score(A, &models[cm[i]]);
+            if (s > s0) { s0 = s; found = cm[i]; fpart = cq[i]; fbase = cb[i]; }
+        }
+        if (found != was) {
+            static int costume_logs;
+            if (costume_logs++ < 40)
+                LOG("models: costume part at %06X (header %08X): %s, RMD %08X -> %s\n", P, mesh, models[was].name, A,
+                    models[found].name);
+        }
+    }
     unsigned slot = h;
     for (int k = 0; k < 8; k++) if (!cache[(h + k) % CACHE].P) { slot = (h + k) % CACHE; break; }
     cache[slot].P = P; cache[slot].hdr = mesh; cache[slot].model = (int16_t)found; cache[slot].part = (int16_t)fpart;
     cache[slot].base = fbase; cache[slot].when = frame_count;
     *part = fpart; *base = fbase;
     return found;
+}
+
+/* a part record now belongs to another model (a costume swap reuses it): drop the old mesh's claim on it */
+static void release_part_owner(Inst *in, int part) {
+    if (!owner) return;
+    int id = (int)(in - insts) + 1;
+    MPart *p = &models[in->model].parts[part];
+    for (int b = 0; b < 2; b++) {
+        uint32_t P = in->P[b][part];
+        if (!P) continue;
+        for (uint32_t a = P; a < P + p->prims_len && a < 0x200000; a += 4)
+            if (owner[a >> 2] == (uint8_t)id) owner[a >> 2] = 0;
+        in->P[b][part] = 0;
+        in->has[b][part] = 0;
+    }
+    in->rec[part] = 0;
 }
 
 /* the actor that used this part record before (records stay with an actor while it exists) */
@@ -578,6 +622,13 @@ static void record_part(uint32_t rec, int skin) {
     }
     if (!in) in = new_instance(m, rec);
     if (!in) return;
+    if (!old_ident && rec) /* the same record on another costume's instance would keep drawing that outfit */
+        for (int i = 0; i < ninst; i++) {
+            Inst *o = &insts[i];
+            if (o == in) continue;
+            for (int q = 0; q < models[o->model].nparts; q++)
+                if (o->rec[q] == rec) release_part_owner(o, q);
+        }
     if (!skin) { run_inst = in; run_model = m; run_buf = buf; run_frame = frame_count; }
     in->rec[part] = rec;
     if (!mm->shadow) request_mesh(mm);
@@ -1669,6 +1720,35 @@ static void draw_instance(Inst *in, int buf) {
     for (int p = 0; p < m->nparts && ref < 0; p++)
         if (ok[p] && m->parts[p].nverts) ref = p;
     if (ref < 0) return; /* nothing of the model drawn this frame */
+    /* Hana's costumes (MARA, MAR2..MAR5) share a head. One body split across two of them draws both whole meshes,
+     * a few units apart (the outfits' joints differ). The mesh with fewer of the game's parts is the extra one. */
+    if (old_ident <= 0 && m->name[0] == 'M' && m->name[1] == 'A' && m->name[2] == 'R' &&
+        (m->name[3] == 'A' || (m->name[3] >= '2' && m->name[3] <= '5' && !m->name[4]))) {
+        int mine = 0;
+        for (int p = 0; p < m->nparts; p++) mine += in->has[buf][p] != 0;
+        float tx = in->bones[buf][ref][3], ty = in->bones[buf][ref][7], tz = in->bones[buf][ref][11];
+        for (int i = 0; i < ninst; i++) {
+            Inst *o = &insts[i];
+            MModel *om = &models[o->model];
+            if (o == in || o->stamp[buf] != frame_count) continue;
+            if (!(om->name[0] == 'M' && om->name[1] == 'A' && om->name[2] == 'R' &&
+                  (om->name[3] == 'A' || (om->name[3] >= '2' && om->name[3] <= '5' && !om->name[4]))))
+                continue;
+            int on = 0, oref = -1;
+            for (int p = 0; p < om->nparts; p++) {
+                on += o->has[buf][p] != 0;
+                if (oref < 0 && o->has[buf][p] && om->parts[p].nverts) oref = p;
+            }
+            if (on <= mine || oref < 0) continue;
+            float dx = o->bones[buf][oref][3] - tx, dy = o->bones[buf][oref][7] - ty, dz = o->bones[buf][oref][11] - tz;
+            if (dx * dx + dy * dy + dz * dz > 1500.0f * 1500.0f) continue;
+            static int overlap_logs;
+            if (overlap_logs++ < 20)
+                LOG("models: %s left out under %s (frame %llu, %d parts against %d)\n", m->name, om->name,
+                    (unsigned long long)frame_count, mine, on);
+            return;
+        }
+    }
     if (getenv("FE_DBG_MODELS")) {
         static int logged;
         char miss[64] = "";

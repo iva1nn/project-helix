@@ -368,6 +368,40 @@ static void hud_box_uv_fix(Vtx *v, const TexState *ts) {
         if (v[i].u == from) v[i].u = to;
 }
 
+/* FE1 disc 4, Hell's Playroom, the aging wheel (NUMBER.RMD part 4, NUMBER.TIM). The IIIII tally is five
+ * strokes on texels u = 8, 10, 12, 14 and 16; the quad's UVs run from 8 to 16. A polygon does not draw its
+ * right and bottom edges, so the texel on the far U is never sampled and that glyph is a second IIII.
+ * Grow the quad one pixel past each of those two edges and carry the far U to 17 — column 17 of the sheet
+ * is empty — so the samples cover 8..16 whichever way the wheel has turned the glyph. */
+static void tally_five(Vtx *v) {
+    int n8 = 0, n16 = 0;
+    for (int i = 0; i < 4; i++) {
+        if (v[i].v != 16 && v[i].v != 31) return;
+        if (v[i].u == 8) n8++;
+        else if (v[i].u == 16) n16++;
+        else return;
+    }
+    if (n8 != 2 || n16 != 2) return;
+    float ax = 0, ay = 0, bx = 0, by = 0;
+    for (int i = 0; i < 4; i++) {
+        float x = v[i].prec ? v[i].fx : (float)v[i].x, y = v[i].prec ? v[i].fy : (float)v[i].y;
+        if (v[i].u == 8) { ax += x; ay += y; }
+        else { bx += x; by += y; }
+    }
+    float dx = bx * 0.5f - ax * 0.5f, dy = by * 0.5f - ay * 0.5f, L = sqrtf(dx * dx + dy * dy);
+    if (L < 0.5f) return;
+    dx /= L; dy /= L;
+    for (int i = 0; i < 4; i++) {
+        float s = v[i].u == 16 ? 1.f : -1.f;
+        float x = (v[i].prec ? v[i].fx : (float)v[i].x) + s * dx;
+        float y = (v[i].prec ? v[i].fy : (float)v[i].y) + s * dy;
+        if (v[i].prec) { v[i].fx = x; v[i].fy = y; }
+        v[i].x = (int)(x >= 0 ? x + 0.5f : x - 0.5f);
+        v[i].y = (int)(y >= 0 ? y + 0.5f : y - 0.5f);
+        if (v[i].u == 16) v[i].u = 17;
+    }
+}
+
 static void cmd_polygon(void) {
     uint32_t c0 = g.buf[0];
     int op = c0 >> 24;
@@ -406,7 +440,7 @@ static void cmd_polygon(void) {
         }
     }
     if (!shaded) for (int i = 1; i < nv; i++) { v[i].r = v[0].r; v[i].gg = v[0].gg; v[i].b = v[0].b; }
-    if (textured && quad) hud_box_uv_fix(v, &ts);
+    if (textured && quad) { hud_box_uv_fix(v, &ts); tally_five(v); }
     if (textured && raw) { /* raw texture: no modulation */ }
     draw_tri(&v[0], &v[1], &v[2], shaded, textured, raw, semi, &ts);
     if (quad) draw_tri(&v[1], &v[2], &v[3], shaded, textured, raw, semi, &ts);
